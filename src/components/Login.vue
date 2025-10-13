@@ -6,41 +6,39 @@
         </div>
         <div class="buttons">
             <button class="btn" @click="login">登录</button>
-            <button class="btn">注册</button>
+            <button class="btn" @click="goRegister">注册</button>
         </div>
     </div>
 </template>
 
 <script setup>
-import {ref} from'vue'
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { myFetch, loginUrl } from '../api';
 
-const username =ref('')
-const password = ref('')
-const router = useRouter()
+const username = ref('');
+const password = ref('');
+const router = useRouter();
 
-async function login() {
+const login = async ()=> {
     try {
-        const res = await fetch('http://localhost:8080/api/user/login', {
-            method:'POST',
-            headers:{'Content-Type': 'application/json'},
-            body: JSON.stringify({ username: username.value, password: password.value})
-        })
-
-        const data = await res.json()
-        if(data.message === '登录成功') {
-            localStorage.setItem('token', data.token)
-            console.log(data)
-            console.log(data.username)
-            console.log(data.role)
+        const data = { username: username.value, password: password.value};
+        const response = await myFetch(loginUrl, 'POST', data);
+        
+        if( response.message === '登录成功' ) {
+            alert(response.message);
         } else {
-            alert('用户名或密码错误')
+            alert(response.message);
         }
-    } catch(err) {
-        console.log(err)
-        alert('登录失败，请检查后端服务')
+    } catch( err ) {
+        console.log('请求失败:' + err);
+        alert('网络错误或服务器异常');
     }
-}
+};
+
+const goRegister  = ()=> {
+    router.push('/register');
+};
 </script>
 
 <style lang="scss" scoped>
