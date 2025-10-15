@@ -29,19 +29,14 @@ const router = useRouter();
 
 const getUserInfo = async ()=> {
     try {
-        const userStr = localStorage.getItem('user');
-        if(!userStr) return;
-        const user = JSON.parse(userStr);
-        console.log(user.username);
-
-        const response = await api.post('/user/userInfo', { username: user.username });
-
+        const response = await api.get('/user/userInfo');
+        console.log(response);
         username.value = response.username;
         name.value = response.name;
         gender.value = response.gender;
-        type.value = response.type;
-        phone.value = response.phone; // 修正：之前写成 response.value
-        email.value = response.email; // 修正：之前写成 response.value
+        type.value = response.typeCn;
+        phone.value = response.phone;
+        email.value = response.email;
     } catch( err ) {
         console.log('获取用户信息失败', err);
         alert('无法获取用户信息，请重新登录');
@@ -50,7 +45,6 @@ const getUserInfo = async ()=> {
 }
 
 const logout = async () => {
-    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     let username = '';
     if( userStr ) {
@@ -65,7 +59,7 @@ const logout = async () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        window.location.reload();
+        router.push('/login');
     } catch( err ) {
         console.log('退出失败:', err);
         alert('退出失败');
@@ -73,13 +67,12 @@ const logout = async () => {
 }
 
 onMounted(() => {
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
-        const user = JSON.parse(userStr)
-        username.value = user.username;
+    const usernameStorage = localStorage.getItem('username')
+    if(usernameStorage) {
+        username.value = usernameStorage;
         getUserInfo();
     } else {
-        username.value = '游客'
+        username.value = '游客';
     }
 })
 </script>
