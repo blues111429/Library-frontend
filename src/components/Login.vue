@@ -47,6 +47,7 @@ const login = async () => {
         if(response.token) {
             localStorage.setItem('token', response.token);
             localStorage.setItem('username', response.username);
+            
             alert(response.message);
             router.push('/userInfo');
         }
