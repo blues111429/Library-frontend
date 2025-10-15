@@ -57,12 +57,20 @@ const goRegister  = ()=> {
 }
 
 .input-container input {
-    height: 25px;
+    width: 250px;
+    height: 40px;
+    padding: 0 12px;
+    font-size: 16px;
+    outline: none;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 .input-container input:hover {
-    background-color: #ccc;
-    border-radius: 4px;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(122, 26, 23, 0.4);
+    border-color: #7a1a17;
 }
 
 .buttons {
