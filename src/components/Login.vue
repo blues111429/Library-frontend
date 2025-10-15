@@ -14,27 +14,39 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { myFetch, loginUrl } from '../api';
+import api from '../api.js';
 
 const username = ref('');
 const password = ref('');
 const router = useRouter();
 
-const login = async ()=> {
+const login = async () => {
     try {
-        const data = { username: username.value, password: password.value};
-        const response = await myFetch(loginUrl, 'POST', data);
-        
-        if( response.message === '登录成功' ) {
-            alert(response.message);
-        } else {
-            alert(response.message);
+        const data = { username: username.value, password: password.value };
+        const response = await api.post('/user/login', data);
+        console.log(response);
+
+        alert(response.message);
+
+        if(response.token) {
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify({
+                username: response.username,
+                type: response.type,
+                userId: response.userId,
+            }))
+
+            api.defaults.headers.common['Authorization'] = `Bearer ${response.token}`;
+
+            console.log(`当前用户Token`, response.token);
+            router.push('/user-info');
         }
     } catch( err ) {
-        console.log('请求失败:' + err);
+        console.log('请求失败:', err);
         alert('网络错误或服务器异常');
     }
-};
+}
+
 
 const goRegister  = ()=> {
     router.push('/register');

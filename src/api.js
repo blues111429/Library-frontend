@@ -1,38 +1,34 @@
-// 默认地址
-const api = 'http://localhost:8080/api';
+import axios from 'axios';
 
+const api = axios.create({
+    baseURL: 'http://127.0.0.1:8080/api',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    timeout: 10000
+});
 
-export const loginUrl = api + '/user/login';
-export const registerUrl = api + '/user/register';
+// 请求拦截器
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if(token) {
+        config.headers.Authorization  = `Bearer ${token}`;
+    }
+    return config;
+}, error => Pormise.reject(error));
 
-// 通用请求封装
-export const myFetch = async (url, method = 'GET', data = null) => {
-    const options = {
-        method,
-        headers: {
-            'Content-Type' : 'application/json'
+api.interceptors.response.use(
+    response => response.data,
+    err => {
+        if(err.response) {
+            if (err.response.status === 401) {
+                console.log('未授权token或token过期，请重新登录');
+            } else if(err.response.status === 403) {
+                console.warn('无权访问');
+            }
         }
-    };
-
-    if(data) {
-        options.body = JSON.stringify(data);
+        return Promise.reject(err);
     }
+);
 
-    try {
-        const response = await fetch(url, options);
-        if(!response.ok) throw new Error('网络错误:' + response.status);
-
-        const result = await response.json();
-        return result;
-    } catch( err ) {
-        console.log('请求失败:' + err);
-        throw err;
-    }
-};
-
-
-// localstorage封装
-export const myGetStorage = (key) => {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : null;
-}
+export default api;

@@ -39,7 +39,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { registerUrl, myFetch } from '../api';
+import api from '../api';
 
 const router = useRouter();
 const form = ref({
@@ -55,20 +55,23 @@ const form = ref({
 const register = async ()=> {
     try {
         const data = {
-            username: form.useRouter.value,
-            password: form.password.value,
-            name: form.name.value,
-            gender: form.gender.value,
-            type: form.type.value,
-            phone: form.phone.value,
-            email: form.email.value
+            username: form.value.username,
+            password: form.value.password,
+            name: form.value.name,
+            gender: form.value.gender,
+            type: form.value.type,
+            phone: form.value.phone,
+            email: form.value.email,
         };
-        const response = await myFetch(registerUrl, 'POST', data);
+        const response = await api.post('/user/register', data);
+        alert(response.message);
 
-        if(response.message === '注册成功') {
-            console.log(response);
-            alert(response.message);
-            Object.keys(form.value).forEach(key => form.value[key] = '');   
+        if(response.token) {
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('userId', response.userId);
+
+            api.defaults.headers.common['Authorization'] = `Beaer ${response.token}`;
+            router.push('/login');
         }
     } catch( err ) {
         console.log(err);
