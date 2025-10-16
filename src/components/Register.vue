@@ -19,11 +19,11 @@
         </div>
         <div class="type-container">
             <label>
-                <input type="radio" value="学生" v-model="form.type"/>
+                <input type="radio" value="student" v-model="form.type"/>
                 学生
             </label>
             <label>
-                <input type="radio" value="教师" v-model="form.type"/>
+                <input type="radio" value="teacher" v-model="form.type"/>
                 教师
             </label>
         </div>

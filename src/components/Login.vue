@@ -43,16 +43,27 @@ const login = async () => {
     try {
         const data = { username: username.value, password: password.value };
         const response = await api.post('/user/login', data)
+        const typeCn = response.typeCn;
         
+        console.log(response);
+
         if(response.token) {
             localStorage.setItem('token', response.token);
             localStorage.setItem('username', response.username);
             
             alert(response.message);
-            router.push('/userInfo');
+
+            if (typeCn === '学生' || typeCn === '教师') {
+                router.push('/userInfo');
+            } else if (typeCn === '管理员') {
+                router.push('/admin');
+            }
+            
+        } else {
+            alert(response.message);
+            loading.value = false;
         }
     } catch( err ) {
-        console.log('请求失败:', err);
         alert('网络错误或服务器异常');
         console.log('catch 捕获:', err);
     } finally {
