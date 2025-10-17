@@ -42,12 +42,12 @@ const getUserInfo = async ()=> {
     try {
         const response = await api.get('/user/userInfo');
         console.log(response);
-        username.value = response.username;
-        name.value = response.name;
-        gender.value = response.gender;
-        type.value = response.typeCn;
-        phone.value = response.phone;
-        email.value = response.email;
+        username.value = response.data.username;
+        name.value = response.data.name;
+        gender.value = response.data.gender;
+        type.value = response.data.typeCn;
+        phone.value = response.data.phone;
+        email.value = response.data.email;
     } catch( err ) {
         console.log('获取用户信息失败', err);
         alert('无法获取用户信息，请重新登录');
@@ -61,21 +61,18 @@ const loadUsers = async () => {
         console.log(response);
         console.log(response.message);
 
-        userList.value = response
+        userList.value = response;
     } catch (err) {
         console.log(err);
     }
 };
 
 const logout = async () => {
-    const username = localStorage.getItem('username');
-
     try {
-        const response = await api.post('/user/logout', { username });
+        const response = await api.post('/user/logout');
 
         alert(response.message);
         localStorage.removeItem('token');
-        localStorage.removeItem('username');
 
         router.push('/login');
     } catch( err ) {

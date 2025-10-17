@@ -10,7 +10,6 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router';
 import { useNavigation } from '../utils/navigation';
 
 const { toLogin, toRegister, toUserInfo } = useNavigation();

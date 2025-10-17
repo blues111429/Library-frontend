@@ -13,6 +13,8 @@
             <button class="btn" @click="toHome">主页</button>
         </div>
     </div>
+
+    <BaseToast ref="toastRef" />
 </template>
 
 <script setup>
@@ -20,11 +22,15 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api.js';
 import { useNavigation } from '../utils/navigation.js';
+import BaseToast from '../components/Toast.vue';    
 
 const username = ref('');
 const password = ref('');
 const loading = ref(false)
 const { toHome, toRegister, toUserInfo } = useNavigation();
+
+const toastRef = ref(null);
+
 const router = useRouter();
 
 
@@ -48,24 +54,26 @@ const login = async () => {
         console.log(response);
 
         if(response.data) {
+            const typeCn = response.data.typeCn;
+
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
             console.log("登录成功,当前用户信息:userToken:", response.data.token, "username:", response.data.username);
             
-            alert(response.message);
-
-            if (typeCn === '学生' || typeCn === '教师') {
-                router.push('/userInfo');
-            } else if (typeCn === '管理员') {
-                router.push('/admin');
-            }
+            toastRef.value?.showToast(response.message, 'success');
+            setTimeout(() => {
+                if (typeCn === '学生' || typeCn === '教师') {
+                    router.push('/userInfo');
+                } else if (typeCn === '管理员') {
+                    router.push('/admin');
+                }
+            }, 1500);
             
         } else {
-            alert(response.message);
-            loading.value = false;
+            toastRef.value?.showToast(response.message, 'warning');
         }
     } catch( err ) {
-        alert('网络错误或服务器异常');
+        toastRef.value?.showToast(err, 'error');
         console.log('catch 捕获:', err);
     } finally {
         setTimeout(()=> {
