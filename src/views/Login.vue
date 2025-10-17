@@ -45,11 +45,9 @@ const login = async () => {
         const data = { username: username.value, password: password.value };
         const response = await api.post('/user/login', data);
 
-        const typeCn = response.data.typeCn;
-
         console.log(response);
 
-        if(response.data.token) {
+        if(response.data) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
             console.log("登录成功,当前用户信息:userToken:", response.data.token, "username:", response.data.username);
@@ -70,7 +68,6 @@ const login = async () => {
         alert('网络错误或服务器异常');
         console.log('catch 捕获:', err);
     } finally {
-        console.log('finally 执行，loading 应该关闭');
         setTimeout(()=> {
             loading.value = false;
         }, 2000);

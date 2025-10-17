@@ -19,6 +19,7 @@
                     <th>状态</th>
                     <th>注册时间</th>
                     <th>最后登录</th>
+                    <th>用户管理</th>
                 </tr>
             </thead>
 
@@ -34,6 +35,10 @@
                     <td>{{ user.status === 1 ? "正常":"禁用" }}</td>
                     <td>{{ formatDate(user.create_time) }}</td>
                     <td>{{ formatDate(user.last_login) }}</td>
+                    <td>
+                        <button class="action-btn disable" v-if="user.status === 1" @click="updateUserStatus(user.user_id, 0)">禁用</button>
+                        <button class="action-btn enable" v-else @click="updateUserStatus(user.user_id, 1)">启用</button>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -48,12 +53,13 @@ import { useNavigation } from '../utils/navigation';
 const userList = ref([]);
 const { toHome, toUserInfo } = useNavigation();
 
+//日期格式
 const formatDate = (time) => {
     if(!time) return '-';
     const date = new Date(time);
     return date.toLocaleString();
 };
-
+//加载用户列表
 const loadUsers = async () => {
     try {
         const token = localStorage.getItem('token');
@@ -65,7 +71,7 @@ const loadUsers = async () => {
         console.log(err);
     }
 };
-
+//新增用户、区别与用户注册开放admin身份
 const addUser = async () => {
     try {
         const username = localStorage.getItem('username');
@@ -74,6 +80,26 @@ const addUser = async () => {
         console.log(err);
     }
 };
+//更新用户账号状态
+const updateUserStatus = async (user_id, newStatus) => {
+    try {
+        console.log(user_id, newStatus);
+        const response = await api.post('/user/updateUserStatus', {
+            userId: user_id,
+            status: newStatus
+        });
+
+        if(response.code === 200 || response.data?.code === 200) {
+            alert('修改成功');
+            await loadUsers();
+        } else {
+            console.log(response);
+            alert(response.message || "修改失败");
+        }
+    } catch (err) {
+        console.log('修改用户状态出错:', err);
+    }
+}
 
 onMounted(()=> {
     loadUsers();
@@ -115,7 +141,7 @@ onMounted(()=> {
         padding: 10px 12px;
         border: 1px solid #ddd;
         text-align: center;
-        width: 50px;
+        width: 100px;
     }
 
     th {
@@ -125,6 +151,28 @@ onMounted(()=> {
 
     tr:hover {
         background-color: #f9f9f9;
+    }
+}
+
+.action-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+
+    &.disable {
+        background-color: red;
+    }
+
+    &.enable {
+        background-color: green;
+    }
+
+    &.hover {
+        opacity: 0.8;
     }
 }
 </style>
