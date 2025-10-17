@@ -33,6 +33,7 @@
     <div class="buttons">
         <button class="btn" @click="register">注册</button>
         <button class="btn" @click="goLogin">登录</button>
+        <button class="btn" @click="toHome">主页</button>
     </div>
 </template>
 
@@ -40,8 +41,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api';
+import { useNavigation } from '../utils/navigation';
 
 const router = useRouter();
+const { toHome } = useNavigation();
 const form = ref({
     username: '',
     password: '',
@@ -66,11 +69,10 @@ const register = async ()=> {
         const response = await api.post('/user/register', data);
         alert(response.message);
 
-        if(response.token) {
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('userId', response.userId);
+        if(response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userId', response.data.userId);
 
-            api.defaults.headers.common['Authorization'] = `Beaer ${response.token}`;
             router.push('/login');
         }
     } catch( err ) {

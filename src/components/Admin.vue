@@ -1,6 +1,11 @@
 <template>
     <div class="admin-container">
         <h2 class="title">管理员页面</h2>
+        <div class="btn-container">
+            <button class="btn" @click="toHome">返回主页</button>
+            <button class="btn" @click="toUserInfo">查看个人信息</button>
+            <button class="btn" @click="addUser">新增用户</button>
+        </div>
         <table class="user-table">
             <thead>
                 <tr>
@@ -38,8 +43,10 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "../api";
+import { useNavigation } from '../utils/navigation';
 
 const userList = ref([]);
+const { toHome, toUserInfo } = useNavigation();
 
 const formatDate = (time) => {
     if(!time) return '-';
@@ -49,11 +56,20 @@ const formatDate = (time) => {
 
 const loadUsers = async () => {
     try {
-        const token = localStorage.getItem("token");
-        const response = await api.get("/user/userList");
+        const token = localStorage.getItem('token');
+        const response = await api.get('/user/userList');
         console.log(response);
 
-        userList.value = response
+        userList.value = response.data
+    } catch (err) {
+        console.log(err);
+    }
+};
+
+const addUser = async () => {
+    try {
+        const username = localStorage.getItem('username');
+        console.log(username);
     } catch (err) {
         console.log(err);
     }
@@ -70,6 +86,18 @@ onMounted(()=> {
     padding: 20px;
     max-width: 1100px;
     margin: 0 auto;
+}
+
+.btn-container {
+    display: flex;
+    margin-bottom :20px;
+    gap: 40px;
+}
+
+.btn {
+    background-color: #7a1a17;
+    color: white;
+    font-size: 16px;
 }
 
 .title {

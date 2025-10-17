@@ -10,6 +10,7 @@
                 <div v-else class="spinner"></div>
             </button>
             <button class="btn" @click="toRegister">注册</button>
+            <button class="btn" @click="toHome">主页</button>
         </div>
     </div>
 </template>
@@ -42,14 +43,16 @@ const login = async () => {
 
     try {
         const data = { username: username.value, password: password.value };
-        const response = await api.post('/user/login', data)
-        const typeCn = response.typeCn;
-        
+        const response = await api.post('/user/login', data);
+
+        const typeCn = response.data.typeCn;
+
         console.log(response);
 
-        if(response.token) {
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('username', response.username);
+        if(response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('username', response.data.username);
+            console.log("登录成功,当前用户信息:userToken:", response.data.token, "username:", response.data.username);
             
             alert(response.message);
 
@@ -73,11 +76,6 @@ const login = async () => {
         }, 2000);
     }
 }
-
-
-const goRegister  = ()=> {
-    router.push('/register');
-};
 </script>
 
 <style lang="scss" scoped>
