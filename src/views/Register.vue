@@ -1,6 +1,6 @@
 <template>
     <div class="register-container">
-        <input v-model="form.username" placeholder="输入用户名" />
+        <input v-model="form.phone" placeholder="请输入手机号" />
         <input v-model="form.password" placeholder="输入密码" />
         <input v-model="form.name" placeholder="输入昵称" />
         <div class="gender-container">
@@ -27,7 +27,6 @@
                 教师
             </label>
         </div>
-        <input v-model="form.phone" placeholder="请输入手机号" />
         <input v-model="form.email" placeholder="请输入邮箱" />
     </div>
     <div class="buttons">
@@ -46,30 +45,28 @@ import { useNavigation } from '../utils/navigation';
 const router = useRouter();
 const { toHome } = useNavigation();
 const form = ref({
-    username: '',
+    phone: '',
     password: '',
     name: '',
     gender: '',
     type: '',
-    phone: '',
     email: ''
 });
 
 const register = async ()=> {
     try {
         const data = {
-            username: form.value.username,
+            phone: form.value.phone,
             password: form.value.password,
             name: form.value.name,
             gender: form.value.gender,
             type: form.value.type,
-            phone: form.value.phone,
             email: form.value.email,
         };
         const response = await api.post('/user/register', data);
         alert(response.message);
 
-        if(response.data.token) {
+        if(response.data) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('userId', response.data.userId);
 

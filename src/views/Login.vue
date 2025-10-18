@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="input-container">
-            <input v-model="username" placeholder="用户名" />
+            <input v-model="phone" placeholder="手机号" />
             <input type="password" v-model="password" placeholder="密码" />
         </div>
         <div class="buttons">
@@ -24,7 +24,7 @@ import api from '../api.js';
 import { useNavigation } from '../utils/navigation.js';
 import BaseToast from '../components/Toast.vue';    
 
-const username = ref('');
+const phone = ref('');
 const password = ref('');
 const loading = ref(false)
 const { toHome, toRegister, toUserInfo } = useNavigation();
@@ -36,8 +36,8 @@ const router = useRouter();
 
 const login = async () => {
 
-    if(!username.value) {
-        alert('请输入用户名');
+    if(!phone.value) {
+        alert('手机号');
         return ;
     }
 
@@ -48,7 +48,7 @@ const login = async () => {
     loading.value = true;
 
     try {
-        const data = { username: username.value, password: password.value };
+        const data = { phone: phone.value, password: password.value };
         const response = await api.post('/user/login', data);
 
         console.log(response);
@@ -58,7 +58,7 @@ const login = async () => {
 
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('username', response.data.username);
-            console.log("登录成功,当前用户信息:userToken:", response.data.token, "username:", response.data.username);
+            console.log("登录成功,当前用户信息:userToken:", response.data.token, "phone:", response.data.phone);
             
             toastRef.value?.showToast(response.message, 'success');
             setTimeout(() => {

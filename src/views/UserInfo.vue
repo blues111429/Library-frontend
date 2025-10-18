@@ -9,8 +9,11 @@
                 <p>电话: {{ phone }}</p>
                 <p>邮箱: {{ email }}</p>
             </div>
-            <button class="btn" @click="loadUsers">加载用户信息</button>
-            <button class="btn" @click="logout">退出登录</button>
+            <div class="button-container">
+                <button class="btn" @click="logout">退出登录</button>
+                <button class="btn" @click="toHome">主页</button>
+                <button class="btn" @click="toAdmin">管理员页面</button>
+            </div>
         </div>
 
         <div v-if="showModal" class="modal-overlay">
@@ -26,6 +29,7 @@
 import { ref, onMounted } from 'vue';
 import api from '../api';
 import { useRouter } from 'vue-router';
+import { useNavigation } from '../utils/navigation';
 
 const name = ref('');
 const gender = ref('');
@@ -35,8 +39,7 @@ const email = ref('');
 const username = ref('');
 const showModal = ref(false);
 const router = useRouter();
-
-const userList = ref([]);
+const { toHome, toAdmin } = useNavigation();
 
 const getUserInfo = async ()=> {
     try {
@@ -54,18 +57,6 @@ const getUserInfo = async ()=> {
         router.push('/login');
     }
 }
-
-const loadUsers = async () => {
-    try {
-        const response = await api.get('/user/userList');
-        console.log(response);
-        console.log(response.message);
-
-        userList.value = response;
-    } catch (err) {
-        console.log(err);
-    }
-};
 
 const logout = async () => {
     try {
@@ -114,6 +105,13 @@ p {
     font-size: 16px;
     color: #333;
     margin: 8px 0;
+}
+
+.button-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-direction: column;
 }
 
 .btn {

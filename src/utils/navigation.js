@@ -7,11 +7,13 @@ export function useNavigation() {
     const toLogin = () => router.push('/login');
     const toRegister = () => router.push('/register');
     const toUserInfo = () => router.push('/userInfo');
+    const toAdmin = () => router.push('/admin');
 
     return {
         toHome,
         toLogin,
         toRegister,
         toUserInfo,
+        toAdmin,
     }
 }
