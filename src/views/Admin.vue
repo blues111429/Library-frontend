@@ -65,8 +65,11 @@
                         <td>{{ formatDate(user.last_login) }}</td>
                         <td>{{ formatDate(user.status_update_time) }}</td>
                         <td>
-                            <button class="action-btn disable" v-if="user.status === 1" @click="updateUserStatus(user.user_id, 0)">禁用</button>
-                            <button class="action-btn enable" v-else @click="updateUserStatus(user.user_id, 1)">启用</button>
+                            <div class="action-buttons">
+                                <button class="action-btn disable" v-if="user.status === 1" @click="updateUserStatus(user.user_id, 0)">禁用</button>
+                                <button class="action-btn enable" v-else @click="updateUserStatus(user.user_id, 1)">启用</button>
+                                <button class="action-btn delete" @click="deleteUser(user.user_id)">删除</button>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -148,11 +151,10 @@ const formatDate = (time) => {
 //加载用户列表
 const loadUsers = async () => {
     try {
-        const token = localStorage.getItem('token');
-        const response = await api.get('/user/userList');
-        console.log(response);
+        const response = await api.get('/admin/userList');
+        const users = response.data || [];
 
-        rawUserList.value = response.data || [];
+        rawUserList.value = users.filter(u => u.status >= 0);
         applyFilter();
     } catch (err) {
         console.log(err);
@@ -161,6 +163,7 @@ const loadUsers = async () => {
 //根据筛选条件过滤
 const applyFilter = () => {
     userList.value = rawUserList.value.filter(user => {
+        if (user.status < 0) return false;
         const typeMatch = !filter.value.type || user.typeCn === filter.value.type;
         const genderMatch = !filter.value.gender || user.gender === filter.value.gender;
         const statusMatch = !filter.value.status || user.status === Number(filter.value.status);
@@ -171,7 +174,7 @@ const applyFilter = () => {
 const updateUserStatus = async (user_id, newStatus) => {
     try {
         console.log(user_id, newStatus);
-        const response = await api.post('/user/updateUserStatus', {
+        const response = await api.post('/admin/updateUserStatus', {
             userId: user_id,
             status: newStatus
         });
@@ -185,6 +188,25 @@ const updateUserStatus = async (user_id, newStatus) => {
         }
     } catch (err) {
         console.log('修改用户状态出错:', err);
+    }
+}
+//删除用户
+const deleteUser = async (user_id) => {
+    if (!confirm("确定删除该用户吗？此操作不可恢复!")) return;
+
+    try {
+        const response = await api.post('/user/deleteUser', {userId: user_id} );
+        console.log(response);
+        if (response.code === 200 || response.data?.code === 200) {
+            alert('删除成功');
+            await loadUsers();
+            console.log("重新加载用户列表:", rawUserList.value.length);
+        } else {
+            alert(response.message || '删除失败');
+        }
+    } catch(err) {
+        console.log('删除用户错误', err);
+        alert('服务器错误，请稍后再试');
     }
 }
 //打开新增用户窗口
@@ -206,7 +228,7 @@ const closeAddUserModal = () => {
 //新增用户
 const submitAddUser = async () => {
     try {
-        const response = await api.post('/user/addUser', newUser.value);
+        const response = await api.post('/admin/addUser', newUser.value);
         if (response.code === 200) {
             alert('新增成功');
             closeAddUserModal();
@@ -232,40 +254,77 @@ onMounted(()=> {
 .admin-container {
     padding: 20px;
     max-width: 1500px;
-    margin: 0 auto;
+    margin: 30px auto;
+    background: #fafafa;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+.title {
+    text-align: center;
+    font-size: 26px;
+    color: #7a1a17;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
 .btn-container {
     display: flex;
-    margin-bottom :20px;
-    gap: 40px;
+    margin-bottom :25px;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .btn {
     background-color: #7a1a17;
     color: white;
     font-size: 16px;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+        background-color: #a0221e;
+        transform: translateY(-1px);
+    }
 }
 
 .filter-container {
     display: flex;
     gap: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 15px 0;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 
     label {
         font-weight: 600;
+        color: #444;
+
         select {
             margin-left: 5px;
-            padding: 4px 6px;
-            border-radius: 4px;
+            padding: 6px 10px;
+            border-radius: 6px;
             border: 1px solid #ccc;
+            font-size: 14px;
+            background: #fff;
+
+            &:hover {
+                border-color: #7a1a17;
+                outline: none;
+            }
         }
     }
-}
-
-.title {
-    text-align: center;
-    margin-bottom: 20px;
 }
 
 .user-table-container {
@@ -304,14 +363,22 @@ onMounted(()=> {
     }
 }
 
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .action-btn {
     padding: 4px 8px;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     color: #fff;
     cursor: pointer;
     font-size: 14px;
     transition: 0.2s;
+    margin: 0 3px;
+    transition: all 0.2s ease;
 
     &.disable {
         background-color: red;
@@ -319,6 +386,10 @@ onMounted(()=> {
 
     &.enable {
         background-color: green;
+    }
+
+    &.delete {
+        background-color: #b22222;
     }
 
     &.hover {
