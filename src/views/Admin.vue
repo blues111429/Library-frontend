@@ -42,7 +42,7 @@
                         <th>姓名</th>
                         <th>性别</th>
                         <th>类别</th>
-                        <th>电话</th>
+                        <th>手机号</th>
                         <th>邮箱</th>
                         <th>状态</th>
                         <th>注册时间</th>
@@ -69,6 +69,7 @@
                                 <button class="action-btn disable" v-if="user.status === 1" @click="updateUserStatus(user.user_id, 0)">禁用</button>
                                 <button class="action-btn enable" v-else @click="updateUserStatus(user.user_id, 1)">启用</button>
                                 <button class="action-btn delete" @click="deleteUser(user.user_id)">删除</button>
+                                <button class="action-btn edit" @click="openEditUserModal(user)">编辑</button>
                             </div>
                         </td>
                     </tr>
@@ -98,7 +99,7 @@
                             <option value="admin">管理员</option>
                         </select>
 
-                        <label>电话：</label>
+                        <label>手机号:</label>
                         <input v-model="newUser.phone" type="text" placeholder="请输入手机号" />
 
                         <label>邮箱：</label>
@@ -114,6 +115,42 @@
                 </div>
             </div>
         </transition>
+
+        <!-- 编辑用户蒙版 -->
+         <transition name="fade-scale">
+            <div v-if="showEditModal" class="modal-overlay">
+                <div class="modal-card">
+                    <h3>修改用户信息</h3>
+                    <div class="form">
+                        <label>手机号:</label>
+                        <input v-model="editUser.phone" type="text" placeholder="请输入手机号" />
+                        
+                        <label>姓名:</label>
+                        <input v-model="editUser.name" type="text" placeholder="请输入姓名" />
+                        
+                        <label>性别：</label>
+                        <select v-model="editUser.gender">
+                            <option value="男">男</option>
+                            <option value="女">女</option>
+                        </select>
+                        
+                        <label>类别:</label>
+                        <select v-model="editUser.type">
+                            <option value="student">学生</option>
+                            <option value="teacher">教师</option>
+                            <option value="admin">管理员</option>
+                        </select>
+
+                        <label>邮箱:</label>
+                        <input v-model="editUser.email" type="text" placeholder="请输入邮箱" />
+                    </div>
+                    <div class="modal-btns">
+                        <div class="btn confirm" @click="submitEditUser">确定</div>
+                        <div class="btn cancel" @click="closeEditUserModal">取消</div>
+                    </div>
+                </div>
+            </div>
+         </transition>
     </div>
 </template>
 
@@ -142,24 +179,36 @@ const newUser = ref({
     email: "",
 });
 
+const showEditModal = ref(false);
+const editUser = ref({
+    user_id: "",
+    phone: "",
+    name: "",
+    gender: "",
+    type: "",
+    email: ""
+});
+
 //日期格式
 const formatDate = (time) => {
     if(!time) return '-';
     const date = new Date(time);
     return date.toLocaleString();
 };
+
 //加载用户列表
 const loadUsers = async () => {
     try {
         const response = await api.get('/admin/userList');
         const users = response.data || [];
-
+        console.log(users);
         rawUserList.value = users.filter(u => u.status >= 0);
         applyFilter();
     } catch (err) {
         console.log(err);
     }
 };
+
 //根据筛选条件过滤
 const applyFilter = () => {
     userList.value = rawUserList.value.filter(user => {
@@ -170,6 +219,7 @@ const applyFilter = () => {
         return typeMatch && genderMatch && statusMatch;
     })
 }
+
 //更新用户账号状态
 const updateUserStatus = async (user_id, newStatus) => {
     try {
@@ -190,6 +240,7 @@ const updateUserStatus = async (user_id, newStatus) => {
         console.log('修改用户状态出错:', err);
     }
 }
+
 //删除用户
 const deleteUser = async (user_id) => {
     if (!confirm("确定删除该用户吗？此操作不可恢复!")) return;
@@ -209,22 +260,7 @@ const deleteUser = async (user_id) => {
         alert('服务器错误，请稍后再试');
     }
 }
-//打开新增用户窗口
-const openAddUserModal = () => {
-    showAddModal.value = true;
-};
-//关闭窗口
-const closeAddUserModal = () => {
-    showAddModal.value = false;
-    newUser.value = {
-        phone: "",
-        password: "",
-        name: "",
-        gender: "男",
-        type: "student",
-        email: "",
-    };
-};
+
 //新增用户
 const submitAddUser = async () => {
     try {
@@ -243,7 +279,59 @@ const submitAddUser = async () => {
         alert("服务器出错,请稍后再试");
     }
 }
+//打开新增用户窗口
+const openAddUserModal = () => {
+    showAddModal.value = true;
+};
+//关闭窗口
+const closeAddUserModal = () => {
+    showAddModal.value = false;
+    newUser.value = {
+        phone: "",
+        password: "",
+        name: "",
+        gender: "男",
+        type: "student",
+        email: "",
+    };
+};
 
+//编辑用户
+const submitEditUser = async () => {
+    try {
+        const response = await api.post('/admin/editUser', editUser.value);
+        console.log(editUser.value);
+        console.log(response);
+        alert(response.message);
+        closeEditUserModal();
+        await loadUsers();
+    } catch (err) {
+        alert("服务器出错,请稍后再试");
+    }
+}
+//打开编辑用户窗口
+const openEditUserModal = (user) => {
+    editUser.value = {
+        user_id: user.user_id,
+        phone: user.phone,
+        name: user.name,
+        gender: user.gender,
+        type: user.type,
+        email: user.email,
+    }
+    showEditModal.value = true;
+}
+//关闭用户编辑窗口
+const closeEditUserModal = () => {
+    showEditModal.value = false;
+    editUser.value = {
+        phone: "",
+        name: "",
+        gender: "",
+        type: "",
+        email: ""
+    }
+}
 onMounted(()=> {
     loadUsers();
 });
@@ -390,6 +478,10 @@ onMounted(()=> {
 
     &.delete {
         background-color: #b22222;
+    }
+
+    &.edit {
+        background-color: black;
     }
 
     &.hover {
