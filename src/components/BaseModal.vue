@@ -9,7 +9,7 @@
                     <span v-else></span>
                 </div>
                 <div class="text-area">
-                    {{ message }}
+                    {{ modalMessage }}
                 </div>
             </div>
         </div>
@@ -18,27 +18,34 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 const visible = ref(false);
-const message = ref('');
+const modalMessage = ref('');
 const typeClass = ref('success');
+const router = useRouter();
 
 let timer = null;
 
 //显示提示
-function showModal(msg, type='success', duration = 2000) {
-    message.value = msg;
+
+function showModalAndRedirect(message = '正在跳转...', type = 'success', redirectPath = '', duration = 2000) {
+    modalMessage.value = message;
     typeClass.value = type;
     visible.value = true;
 
-    if(timer) clearTimeout(timer);
+    if (timer) clearTimeout(timer);
+
     timer = setTimeout(() => {
         visible.value = false;
+        if(redirectPath) {
+            router.push(redirectPath);
+        }
     }, duration);
-};
+}
 
 defineExpose({
-    showModal
+    showModalAndRedirect
 });
 </script>
 
