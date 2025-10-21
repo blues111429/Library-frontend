@@ -3,12 +3,12 @@
         <div class="logo" @click="$router.push('/')">📚 智能图书馆</div>
         <nav>
             
-            <button v-if="!isLoggedIn" @click="$router.push('/login')">登录</button>
+            <button v-if="!userStore.isLoggedIn" @click="$router.push('/login')">登录</button>
             
             <div v-else class="user-menu" @mouseenter="showDropdown=true" @mouseleave="handlerMouseLeave">
-                <button class="user-btn">欢迎,{{ name }}</button>
+                <button class="user-btn">欢迎,{{ userStore.userInfo.name }}</button>
                 <div v-if="showDropdown" class="dropdown">
-                    <p @click="$router.push('/userInfo')">个人中心</p>
+                    <p @click="$router.push('/userCenter')">个人中心</p>
                     <p @click="logout">退出登录</p>
                 </div>
             </div>
@@ -17,16 +17,20 @@
             <button>智能推荐</button>
             <button>热门榜单</button>
         </nav>
+
+        <BaseModal ref="modalRef" />
     </header>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../api';
+import { userUserStore } from '../stores/userStore';
+import BaseModal from './BaseModal.vue';
 
-const isLoggedIn = ref(false);
-const name = ref('');
 const showDropdown = ref(false);
+const userStore = userUserStore();
+const modalRef = ref(null);
 
 const handlerMouseLeave = () => {
     setTimeout(() => {
@@ -36,28 +40,19 @@ const handlerMouseLeave = () => {
 
 const logout = async () => {
     try {
-        const response = await api.post('/user/logout');
-        console.log(response);
-        alert(response.message);
+        await api.post('/user/logout');
+        userStore.logout();
+        modalRef.value.showModalAndRedirect('您已退出登录', 'success');
     } catch (err) {
-        console.error('退出请求失败', err);
+        modalRef.value.showModalAndRedirect('退出失败，请重试', 'error');
     } finally {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("name");
-        isLoggedIn.value = false;
-        name.value = '';
         showDropdown.value = false;
     }
 }
 
-onMounted(() => {
-    const token = localStorage.getItem("token");
-    const storagedname = localStorage.getItem("name");
-
-    if(token && storagedname) {
-        isLoggedIn.value = true;
-        name.value = storagedname;
+onMounted(async () => {
+    if (localStorage.getItem('token') && !userStore.isLoggedIn) {
+        await userStore.fetchUserInfo();
     }
 })
 </script>

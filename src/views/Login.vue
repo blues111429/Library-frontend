@@ -25,17 +25,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api.js';
-import BaseToast from '../components/Toast.vue';    
-
+import BaseToast from '../components/Toast.vue';
+import { userUserStore } from '../stores/userStore.js';
+//登录所需数据
 const phone = ref('');
 const password = ref('');
+//加载状态
 const loading = ref(false)
-
+//弹窗显示
 const toastRef = ref(null);
+//定义路由
 const router = useRouter();
+//
+const userStore = userUserStore();
 
 const login = async () => {
 
@@ -48,33 +53,26 @@ const login = async () => {
         toastRef.value?.showToast('请输入密码', 'warning');
         return ;
     }
-
     loading.value = true;
-
     try {
         const data = { phone: phone.value, password: password.value };
         const response = await api.post('/user/login', data);
 
         if(response.data) {
             const typeCn = response.data.typeCn;
-
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('username', response.data.username);
-            localStorage.setItem('name', response.data.name);
-
-            console.log(response.data.name);
             console.log("登录成功,当前用户信息:userToken:", response.data.token, "phone:", response.data.phone);
+            await userStore.fetchUserInfo();
             
             toastRef.value?.showToast(response.message, 'success');
 
             setTimeout(() => {
                 if (typeCn === '学生' || typeCn === '教师') {
-                    router.push('/userInfo');
+                    router.back();
                 } else if (typeCn === '管理员') {
-                    router.push('/admin');
+                    router.back();
                 }
             }, 1500);
-            
         } else {
             toastRef.value?.showToast(response.message, 'warning');
         }
@@ -87,6 +85,17 @@ const login = async () => {
         }, 1000);
     }
 }
+
+const handleKeydown = (e) => {
+    if(e.code === 'Enter') {
+        e.preventDefault();
+        login();
+    }
+};
+
+onMounted(()=> {
+    window.addEventListener('keydown', handleKeydown);
+});
 </script>
 
 <style lang="scss" scoped>

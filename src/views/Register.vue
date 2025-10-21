@@ -40,8 +40,8 @@
 
             <div class="buttons">
                 <button class="btn register-btn" @click="register">注册</button>
-                <button class="btn login-btn" @click="goLogin">登录</button>
-                <button class="btn home-btn" @click="toHome">主页</button>
+                <button class="btn login-btn" @click="$router.push('/login')">登录</button>
+                <button class="btn home-btn" @click="$router.push('/')">主页</button>
             </div>
         </div>
     </div>
@@ -51,10 +51,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api';
-import { useNavigation } from '../utils/navigation';
 
 const router = useRouter();
-const { toHome } = useNavigation();
 
 const form = ref({
     phone: '',
@@ -106,10 +104,6 @@ const register = async () => {
         console.error('注册失败', err);
         alert('注册失败，请重试');
     }
-};
-
-const goLogin = () => {
-    router.push('/login');
 };
 </script>
 

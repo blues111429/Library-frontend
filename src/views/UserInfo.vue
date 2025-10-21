@@ -1,188 +1,218 @@
 <template>
     <div class="profile-page">
-        <div v-if="name && name !== '游客'" class="profile-card">
-            <h2 class="title">{{ name }}的个人中心</h2>
-            <div class="info">
-                <div class="info-item"><span class="label">性别:</span> {{ gender }}</div>
-                <div class="info-item"><span class="label">类别:</span> {{ type }}</div>
-                <div class="info-item"><span class="label">电话:</span> {{ phone }}</div>
-                <div class="info-item"><span class="label">邮箱:</span> {{ email }}</div>
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading">
+            <div class="spinner"></div>
+            <p>正在加载用户信息...</p>
+        </div>
+
+        <!-- 登录成功 -->
+        <div v-else-if="isLoggedIn" class="profile-card">
+            <div class="header">
+                <div class="avatar">{{ name.charAt(0) || '访' }}</div>
+                <div class="user-info">
+                    <h2 class="name">{{ name }}</h2>
+                    <p class="type-tag">{{ type || '普通用户' }}</p>
+                </div>
             </div>
-            <div class="button-container">
-                <button class="btn logout" @click="logout">退出登录</button>
-                <button class="btn home" @click="toHome">主页</button>
-                <button class="btn admin" @click="toAdmin">管理员页面</button>
+
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">性别</span>
+                    <span class="value">{{ gender || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">类别</span>
+                    <span class="value">{{ type || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">电话</span>
+                    <span class="value">{{ phone || '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">邮箱</span>
+                    <span class="value">{{ email || '未填写' }}</span>
+                </div>
             </div>
         </div>
 
+        <!-- 未登录 -->
+        <div v-else class="empty">
+            <p>您还未登录，请先登录后查看个人信息</p>
+            <button class="btn login" @click="$router.push('/login')">立即登录</button>
+        </div>
+
         <BaseModal ref="modalRef" />
-        
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import api from '../api';
-import { useNavigation } from '../utils/navigation';
+import { ref, onMounted, computed  } from 'vue';
 import BaseModal from '../components/BaseModal.vue';
-
-const name = ref('');
-const gender = ref('');
-const type = ref('');
-const phone = ref('');
-const email = ref('');
-const username = ref('');
+import { userUserStore } from '../stores/userStore';
+//弹窗显示
 const modalRef = ref(false);
-const { toHome, toAdmin } = useNavigation();
+//加载状态
+const loading = ref(true);
+//
+const userStore = userUserStore();
+
+// 用计算属性绑定全局状态
+const isLoggedIn = computed(() => userStore.isLoggedIn);
+const name = computed(() => userStore.userInfo.name);
+const gender = computed(() => userStore.userInfo.gender);
+const type = computed(() => userStore.userInfo.type);
+const phone = computed(() => userStore.userInfo.phone);
+const email = computed(() => userStore.userInfo.email);
 
 const getUserInfo = async () => {
     try {
-        const response = await api.get('/user/userInfo');
-        name.value = response.data.name;
-        gender.value = response.data.gender;
-        type.value = response.data.typeCn;
-        phone.value = response.data.phone;
-        email.value = response.data.email;
+        await userStore.fetchUserInfo();//拉取用户信息
     } catch (err) {
         console.log('获取用户信息失败', err);
-        modalRef.value.showModalAndRedirect('无法获取用户信息，请重新登录','warning', '/login');
+        modalRef.value.showModalAndRedirect('无法获取用户信息，请重新登录', 'warning', '/login');
+    } finally {
+        loading.value = false;
     }
 };
 
-const logout = async () => {
-    try {
-        const response = await api.post('/user/logout');
-        console.log(response);
-        modalRef.value.showModalAndRedirect(response.message, 'success', '/login');
-    } catch (err) {
-        console.error('退出请求失败', err);
-        modalRef.value.showModalAndRedirect('退出失败，请重试');
-    } finally {
-        localStorage.removeItem("token");
-        localStorage.removeItem("username");
-        localStorage.removeItem("name");
-        name.value = '';
-    }
-}
-
 onMounted(() => {
-    const nameStorage = localStorage.getItem('name');
-    if (nameStorage) {
-        username.value = nameStorage;
+    if (localStorage.getItem('name')) {
         getUserInfo();
     } else {
-        modalRef.value.showModalAndRedirect('您还未登录，正在跳转到登录页面...', 'warning', '/login');
+        loading.value = false;
+        modalRef.value.showModalAndRedirect('您还未登录', 'warning');
     }
 });
 </script>
 
 <style lang="scss" scoped>
 .profile-page {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 700px;
+    margin: 60px auto;
     font-family: 'Segoe UI', sans-serif;
 }
 
-.profile-card {
-    background: #ffffff;
-    padding: 30px 25px;
-    border-radius: 16px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    text-align: center;
-}
-
-.title {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-}
-
-.info {
+/* ========== 加载中状态 ========== */
+.loading {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 25px;
+    align-items: center;
+    color: #555;
+    font-size: 18px;
+    margin-top: 120px;
 
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        font-size: 16px;
-        color: #555;
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #dbeafe;
+        border-top-color: #3182ce;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 10px;
+    }
 
-        .label {
-            font-weight: 500;
-            color: #333;
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+}
+
+/* ========== 未登录状态 ========== */
+.empty {
+    text-align: center;
+    color: #666;
+    font-size: 18px;
+    margin-top: 100px;
+
+    .btn {
+        margin-top: 20px;
+        padding: 10px 22px;
+        background-color: #3182ce;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        &:hover {
+            background-color: #2b6cb0;
         }
     }
 }
 
-.button-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-
-    .btn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
+/* ========== 用户信息卡片 ========== */
+.profile-card {
+    background: #ffffff;
+    padding: 36px 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    &:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
     }
 
-    .logout {
-        background-color: #e53e3e;
-    }
-    .logout:hover {
-        background-color: #c53030;
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #63b3ed, #4299e1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 28px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(66, 153, 225, 0.4);
+        }
+
+        .user-info {
+            .name {
+                font-size: 24px;
+                font-weight: 600;
+                color: #2d3748;
+                margin-bottom: 4px;
+            }
+
+            .type-tag {
+                display: inline-block;
+                padding: 4px 10px;
+                font-size: 14px;
+                border-radius: 6px;
+                background-color: #ebf8ff;
+                color: #2b6cb0;
+                font-weight: 500;
+            }
+        }
     }
 
-    .home {
-        background-color: #3182ce;
-    }
-    .home:hover {
-        background-color: #2b6cb0;
-    }
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 30px;
 
-    .admin {
-        background-color: #38a169;
-    }
-    .admin:hover {
-        background-color: #2f855a;
-    }
-}
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #e2e8f0;
+            padding-bottom: 6px;
+            font-size: 16px;
 
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
+            .label {
+                color: #4a5568;
+                font-weight: 500;
+            }
 
-.modal {
-    background: #fff;
-    padding: 28px 36px;
-    border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    text-align: center;
-
-    h3 {
-        font-size: 20px;
-        margin-bottom: 12px;
-    }
-
-    p {
-        font-size: 16px;
-        color: #555;
+            .value {
+                color: #2d3748;
+            }
+        }
     }
 }
 </style>
