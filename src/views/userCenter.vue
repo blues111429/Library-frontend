@@ -39,17 +39,18 @@ import Navbar from '../components/Navbar.vue';
 import { ref, computed } from 'vue';
 import { useUserStore } from '../stores/userStore';
 
+//子页面
 import UserInfo from './UserInfo.vue';
-
+import UserManage from './UserManage.vue';
 
 const userStore = useUserStore();
 const userType = computed(() => userStore.userInfo.type);
-
 const activeMenu = ref('info');
 
 const currentComponent = computed(() => {
     switch (activeMenu.value) {
         case 'info': return UserInfo;
+        case'userManage': return UserManage;
         default: return UserInfo;
     }
 });

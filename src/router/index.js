@@ -4,7 +4,7 @@ import Home from "../views/Home.vue";
 import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
 import UserInfo from "../views/UserInfo.vue";
-import Admin from "../views/Admin.vue";
+import Admin from "../views/UserManage.vue";
 import Navbar from "../components/Navbar.vue";
 import UserCenter from "../views/UserCenter.vue";
 
