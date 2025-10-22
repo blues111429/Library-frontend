@@ -42,6 +42,7 @@ import { useUserStore } from '../stores/userStore';
 //子页面
 import UserInfo from './UserInfo.vue';
 import UserManage from './UserManage.vue';
+import BookManage from './BookManage.vue';
 
 const userStore = useUserStore();
 const userType = computed(() => userStore.userInfo.type);
@@ -51,6 +52,7 @@ const currentComponent = computed(() => {
     switch (activeMenu.value) {
         case 'info': return UserInfo;
         case'userManage': return UserManage;
+        case'bookManage': return BookManage;
         default: return UserInfo;
     }
 });
