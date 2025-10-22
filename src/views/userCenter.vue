@@ -5,10 +5,21 @@
         <div class="content-wrapper">
             <aside class="sidebar">
                 <ul>
+                    <!-- 所有人都有 -->
                     <li :class="{ active: activeMenu === 'info' }" @click="activeMenu='info'">用户信息</li>
-                    <li :class="{ active: activeMenu === 'bookshelf'}" @click="activeMenu='bookshelf'">我的书架</li>
-                    <li :class="{ active: activeMenu === 'history' }" @click="activeMenu='history'">借阅历史</li>
-                    <li :class="{ active: activeMenu === 'edit' }" @click="activeMenu='edit'">修改信息</li>
+
+                    <!-- 普通用户功能 -->
+                    <template v-if="userType !== '管理员'">
+                        <li :class="{ active: activeMenu === 'bookshelf' }" @click="activeMenu='bookshelf'">我的书架</li>
+                        <li :class="{ active: activeMenu === 'history' }" @click="activeMenu='history'">借阅历史</li>
+                    </template>
+
+                    <!-- 管理员功能 -->
+                    <template v-else>
+                        <li :class="{ active: activeMenu === 'userManage' }" @click="activeMenu='userManage'">用户管理</li>
+                        <li :class="{ active: activeMenu === 'bookManage' }" @click="activeMenu='bookManage'">图书管理</li>
+                        <li :class="{ active: activeMenu === 'systemLog' }" @click="activeMenu='systemLog'">系统日志</li>
+                    </template>
                 </ul>
 
                 <div class="button-group">
@@ -26,12 +37,18 @@
 <script setup>
 import Navbar from '../components/Navbar.vue';
 import { ref, computed } from 'vue';
+import { useUserStore } from '../stores/userStore';
+
 import UserInfo from './UserInfo.vue';
+
+
+const userStore = useUserStore();
+const userType = computed(() => userStore.userInfo.type);
 
 const activeMenu = ref('info');
 
 const currentComponent = computed(() => {
-    switch(activeMenu.value) {
+    switch (activeMenu.value) {
         case 'info': return UserInfo;
         default: return UserInfo;
     }
@@ -49,15 +66,15 @@ const currentComponent = computed(() => {
     display: flex;
     flex: 1;
     padding: 20px;
-    border-color: #f5f7fa;
 }
 
+/* ==== 侧边栏 ==== */
 .sidebar {
-    width: 200px;
-    border-color: #ffffff;
+    width: 220px;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 
     ul {
         list-style: none;
@@ -70,14 +87,20 @@ const currentComponent = computed(() => {
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s ease;
+            color: #333;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
 
             &.active {
                 background-color: #4f79a8;
                 color: #fff;
+                transform: scale(0.98);
             }
 
             &:hover:not(.active) {
                 background-color: #e6f0ff;
+                color: #1a3f78;
             }
         }
     }
@@ -114,7 +137,7 @@ const currentComponent = computed(() => {
     padding: 20px;
     background-color: #ffffff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     min-height: 400px;
 }
 </style>

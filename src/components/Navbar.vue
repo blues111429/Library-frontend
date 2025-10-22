@@ -25,11 +25,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../api';
-import { userUserStore } from '../stores/userStore';
+import { useUserStore } from '../stores/userStore';
 import BaseModal from './BaseModal.vue';
 
 const showDropdown = ref(false);
-const userStore = userUserStore();
+const userStore = useUserStore();
 const modalRef = ref(null);
 
 const handlerMouseLeave = () => {

@@ -138,7 +138,7 @@
                         <select v-model="editUser.type">
                             <option value="student">学生</option>
                             <option value="teacher">教师</option>
-                            <option value="admin">管理员</option>
+                            <option value="admin">管理员</option>   
                         </select>
 
                         <label>邮箱:</label>
@@ -300,13 +300,14 @@ const closeAddUserModal = () => {
 const submitEditUser = async () => {
     try {
         const response = await api.post('/admin/editUser', editUser.value);
-        console.log(editUser.value);
+        console.log("修改值:", editUser.value);
         console.log(response);
         alert(response.message);
         closeEditUserModal();
         await loadUsers();
     } catch (err) {
         alert("服务器出错,请稍后再试");
+        console.log(err);
     }
 }
 //打开编辑用户窗口

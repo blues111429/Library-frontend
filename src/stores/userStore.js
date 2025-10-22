@@ -1,10 +1,11 @@
 import { defineStore } from "pinia";
 import api from "../api";
 
-export const userUserStore = defineStore('user', {
+export const useUserStore = defineStore('user', {
     state: () => ({
         isLoggedIn: false,
         userInfo: {
+            user_id: '',
             name: '',
             gender: '',
             type: '',
@@ -19,6 +20,7 @@ export const userUserStore = defineStore('user', {
             try {
                 const response = await api.get('/user/userInfo');
                 this.userInfo = {
+                    user_id: response.data.user_id,
                     name: response.data.name,
                     gender: response.data.gender,
                     type: response.data.typeCn,
@@ -31,6 +33,7 @@ export const userUserStore = defineStore('user', {
                 console.log('获取用户信息失败:', err);
                 this.isLoggedIn = false;
                 this.userInfo = {
+                    user_id: '',
                     name: '',
                     gender: '',
                     type: '',
@@ -43,6 +46,7 @@ export const userUserStore = defineStore('user', {
         logout() {
             this.isLoggedIn = false;
             this.userInfo = {
+                user_id: '',
                 name: '',
                 gender: '',
                 type: '',

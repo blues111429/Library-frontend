@@ -29,7 +29,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api.js';
 import BaseToast from '../components/Toast.vue';
-import { userUserStore } from '../stores/userStore.js';
+import { useUserStore } from '../stores/userStore.js';
 //登录所需数据
 const phone = ref('');
 const password = ref('');
@@ -40,7 +40,7 @@ const toastRef = ref(null);
 //定义路由
 const router = useRouter();
 //
-const userStore = userUserStore();
+const userStore = useUserStore();
 
 const login = async () => {
 
