@@ -181,7 +181,7 @@ const submitUser = async () => {
 
 const deleteUser = async id => {
     if (confirm('确定删除该用户吗？')) {
-        await api.post('/admin/deleteUser', { userId: id });
+        await api.post('/user/deleteUser', { userId: id });
         await loadUsers();
     }
 };
@@ -296,6 +296,7 @@ onMounted(loadUsers);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 999;
 }
 
 .modal-card {
