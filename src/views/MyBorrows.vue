@@ -18,9 +18,9 @@
                 <tbody>
                     <tr v-for="record in records" :key="record.id">
                         <td>
-                            <router-link :to="`/book/${record.bookId}`" class="book-link">
+                            <a href="javascript:;" class="book-link" @click="goDetail(record.bookId)">
                                 {{ record.bookTitle }}
-                            </router-link>
+                            </a>
                         </td>
                         <td>{{ formatDate(record.borrowDate) }}</td>
                         <td>{{ formatDate(record.dueDate) }}</td>
@@ -48,9 +48,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../api';
+import { useRouter } from "vue-router";
 
 const records = ref([]);
 const loading = ref(true);
+const router = useRouter();
 
 const formatDate = t => (t ? new Date(t).toLocaleString() : '-');
 
@@ -110,6 +112,17 @@ const returnBook = async id => {
         alert('归还失败，请重试');
     }
 };
+
+const goDetail = async (bookId) => {
+    try {
+        await api.post('/book/browse', { bookId });
+
+        router.push(`/book/${bookId}`);
+    } catch (err) {
+        console.log('记录浏览历史失败', err);
+        router.push(`/book/${bookId}`);
+    }
+}
 
 onMounted(() => {
     loadRecords();

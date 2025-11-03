@@ -196,7 +196,10 @@ const applyFilter = () => {
 };
 
 // 跳转详情
-const goDetail = (id) => router.push(`/book/${id}`);
+const goDetail = (id) => {
+    api.post('/book/browse', {bookId : id});
+    router.push(`/book/${id}`);
+}
 
 onMounted(() => {
     loadBooks();
