@@ -40,11 +40,11 @@
                         <th>姓名</th>
                         <th>性别</th>
                         <th>类别</th>
-                        <th>手机号</th>
                         <th>邮箱</th>
                         <th>状态</th>
                         <th>注册时间</th>
                         <th>最后登录</th>
+                        <th>状态修改时间</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -54,7 +54,6 @@
                         <td>{{ user.name }}</td>
                         <td>{{ user.gender }}</td>
                         <td>{{ user.typeCn }}</td>
-                        <td>{{ user.phone }}</td>
                         <td>{{ user.email }}</td>
                         <td>
                             <span :class="['status', user.status === 1 ? 'active' : 'disabled']">
@@ -63,6 +62,7 @@
                         </td>
                         <td>{{ formatDate(user.create_time) }}</td>
                         <td>{{ formatDate(user.last_login) }}</td>
+                        <td>{{ formatDate(user.status_update_time) }}</td>
                         <td class="actions">
                             <button class="action edit" @click="openEditUserModal(user)">编辑</button>
                             <button class="action danger" @click="deleteUser(user.user_id)">删除</button>
@@ -86,6 +86,9 @@
 
                         <label>手机号</label>
                         <input v-model="editUser.phone" placeholder="手机号" />
+
+                        <label v-if="!isEdit" >密码:</label>
+                        <input v-if="!isEdit" v-model="editUser.password" type="password" placeholder="密码" />
 
                         <label>邮箱</label>
                         <input v-model="editUser.email" placeholder="邮箱" />
@@ -125,9 +128,10 @@ const filter = ref({ type: '', gender: '', status: '' });
 const showModal = ref(false);
 const isEdit = ref(false);
 const editUser = ref({
-    user_id: '',
+    user_id : '',
     name: '',
     phone: '',
+    password : '',
     gender: '男',
     email: '',
     type: 'student'
@@ -173,8 +177,12 @@ const openEditUserModal = user => {
 const closeModal = () => (showModal.value = false);
 
 const submitUser = async () => {
+    console.log(editUser.value);
     const endpoint = isEdit.value ? '/admin/editUser' : '/admin/addUser';
-    await api.post(endpoint, editUser.value);
+    const response = await api.post(endpoint, editUser.value);
+    if(!response.value) {
+        alert(response.message);
+    }
     await loadUsers();
     closeModal();
 };
@@ -194,6 +202,14 @@ onMounted(loadUsers);
     background: #fff;
     padding: 20px;
     border-radius: 12px;
+
+    h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+        color: #2b4c7e;
+        text-align: center;
+        font-weight: 600;
+    }
 }
 
 .title {
@@ -232,7 +248,7 @@ onMounted(loadUsers);
 }
 
 .user-table-container {
-    max-height: 600px;           /* 容器最大高度，可按需求调整 */
+    max-height: 700px;           /* 容器最大高度，可按需求调整 */
     overflow-y: auto;            /* 超出时显示垂直滚动条 */
     border: 1px solid #ddd;
     border-radius: 8px;

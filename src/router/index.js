@@ -6,17 +6,27 @@ import Register from "../views/Register.vue";
 import UserInfo from "../views/UserInfo.vue";
 import Admin from "../views/UserManage.vue";
 import Navbar from "../components/Navbar.vue";
-import UserCenter from "../views/UserCenter.vue";
+import UserCenter from "../views/userCenter.vue";
 import BookManage from "../views/BookManage.vue";
 import UserManage from "../views/UserManage.vue";
+import AdminLog from "../views/AdminLog.vue";
+import BookDetail from "../views/BookDetail.vue";
+import BookList from "../views/BookList.vue";
 
 const routes = [
+    //首页
     { path:'/', name:"home", component: Home },
+    //导航栏
     { path:'/navbar', name:"navbar",  component:Navbar },
+    //登录注册
     { path:'/login', name:"login", component: Login },
     { path:'/register', name:"register", component: Register },
     //用户中心
     { path:'/userCenter', name:"userCenter",  component: UserCenter},
+    //图书详情
+    { path:'/book/:id', name:"bookDetail", component: BookDetail },
+    //图书列表
+    { path:'/bookList', name:"bookList", component: BookList },
     
     //功能模块
     //用户信息
@@ -27,6 +37,8 @@ const routes = [
     { path:'/admin', name:"admin", component:Admin },
     //用户管理
     { path:'/userManage', name:"userManage", component: UserManage},
+    //管理员日志
+    { path:'/adminLog', name:"adminLog", component: AdminLog },
 ]
 
 const router = createRouter({

@@ -68,9 +68,9 @@ const login = async () => {
 
             setTimeout(() => {
                 if (typeCn === '学生' || typeCn === '教师') {
-                    router.back();
+                    router.push('/')
                 } else if (typeCn === '管理员') {
-                    router.back();
+                    router.back('/userCenter');
                 }
             }, 1500);
         } else {

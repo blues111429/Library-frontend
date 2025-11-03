@@ -7,18 +7,19 @@
                 <ul>
                     <!-- 所有人都有 -->
                     <li :class="{ active: activeMenu === 'info' }" @click="activeMenu='info'">用户信息</li>
+                    <li :class="{ active: activeMenu === 'myBorrows' }" @click="activeMenu='myBorrows'">借阅历史</li>
 
                     <!-- 普通用户功能 -->
                     <template v-if="userType !== '管理员'">
                         <li :class="{ active: activeMenu === 'bookshelf' }" @click="activeMenu='bookshelf'">我的书架</li>
-                        <li :class="{ active: activeMenu === 'history' }" @click="activeMenu='history'">借阅历史</li>
+                        
                     </template>
-
+                    
                     <!-- 管理员功能 -->
                     <template v-else>
                         <li :class="{ active: activeMenu === 'userManage' }" @click="activeMenu='userManage'">用户管理</li>
                         <li :class="{ active: activeMenu === 'bookManage' }" @click="activeMenu='bookManage'">图书管理</li>
-                        <li :class="{ active: activeMenu === 'systemLog' }" @click="activeMenu='systemLog'">系统日志</li>
+                        <li :class="{ active: activeMenu === 'adminLog' }" @click="activeMenu='adminLog'">管理员日志</li>
                     </template>
                 </ul>
 
@@ -36,23 +37,31 @@
 
 <script setup>
 import Navbar from '../components/Navbar.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useUserStore } from '../stores/userStore';
 
 //子页面
 import UserInfo from './UserInfo.vue';
 import UserManage from './UserManage.vue';
 import BookManage from './BookManage.vue';
+import AdminLog from './AdminLog.vue';
+import MyBorrows from './MyBorrows.vue';
 
 const userStore = useUserStore();
 const userType = computed(() => userStore.userInfo.type);
-const activeMenu = ref('info');
+
+const activeMenu = ref(localStorage.getItem('activeMenu') || 'info');
+watch(activeMenu, (newVal) => {
+    localStorage.setItem('activeMenu', newVal);
+});
 
 const currentComponent = computed(() => {
     switch (activeMenu.value) {
         case 'info': return UserInfo;
+        case'myBorrows': return MyBorrows;
         case'userManage': return UserManage;
         case'bookManage': return BookManage;
+        case'adminLog' : return AdminLog;
         default: return UserInfo;
     }
 });

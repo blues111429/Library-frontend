@@ -1,6 +1,6 @@
 <template>
 	<div class="book-manage">
-
+		<h2>图书管理</h2>
 		<!-- 筛选 -->
 		<div class="filter">
 			<!-- 根据类别 -->
@@ -45,7 +45,11 @@
 				<tbody>
 					<tr v-for="book in filteredBooks" :key="book.id">
 						<td>{{ book.id }}</td>
-						<td>{{ book.title }}</td>
+						<td>
+							<router-link :to="`/book/${book.id}`" class="book-link">
+								{{ book.title }}
+							</router-link>
+						</td>
 						<td>{{ book.author }}</td>
 						<td>{{ book.publisher }}</td>
 						<td>{{ getCategoryName(book.categoryId) }}</td>
@@ -73,6 +77,44 @@
 			</table>
 			<div v-if="filteredBooks.length === 0" class="no-data">暂无符合条件的图书</div>
 		</div>
+
+		<!-- 编辑/新增图书 -->
+		<div v-if="showModal" class="modal-overlay">
+			<div class="modal">
+				<h3>{{ isEdit ? '编辑图书' : '新增图书' }}</h3>
+				<div class="modal-body">
+					<label>书名:</label>
+					<input v-model="editBook.title" />	
+
+					<label>作者:</label>
+					<input v-model="editBook.author" />
+
+					<label>分类:</label>
+					<select v-model="editBook.categoryId">
+						<option v-for="c in categoryList" :key="c.id" :value="c.id">{{ c.name }}</option>
+					</select>
+
+					<label>ISBN:</label>
+					<input v-model="editBook.isbn" />
+
+					<label>总册数:</label>
+					<input v-model="editBook.totalCopies" />
+
+					<label>可借册数:</label>
+					<input v-model="editBook.availableCopies" />
+
+					<label>出版社:</label>
+					<input v-model="editBook.publisher" />
+
+					<label>出版日期:</label>
+					<input v-model="editBook.publishYear" />
+				</div>
+				<div class="modal-footer">
+					<button class="btn confirm" @click="submitBook">{{ isEdit ? '保存修改' : '确认新增' }}</button>
+					<button class="btn cancel" @click="closeModal">取消</button>
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -90,12 +132,26 @@ const searchKeyword = ref('');
 //加载状态
 const loading = ref(true);
 
+const isEdit = ref(false);
+const showModal = ref(false);
+const editBook = ref({
+	book_id : '',
+	title : '',
+	author: '',
+	categoryId : '',
+	isbn : '',
+	totalCopies : '',
+	availableCopies: '',
+	publisher : '',
+	publishYear : '',
+})
+
 // 获取图书列表
 const loadBooks = async () => {
 	try {
 		const response = await api.get('/book/bookList');
 		bookList.value = Array.isArray(response.data) ? response.data : [];
-		console.log(response);
+		console.log(response.data);
 	} catch (err) {
 		console.error('获取图书列表失败:', err);
 	}
@@ -137,7 +193,6 @@ const getCategoryName = (id) => {
 };
 
 //改变状态
-
 const toggleStatus = async (book) => {
 	try {
 		const newStatus = book.status === 1 ? 0 : 1;
@@ -154,6 +209,38 @@ const toggleStatus = async (book) => {
 	}
 }
 
+const openAddModal = () => {
+	isEdit.value = false;
+	editBook.value = { totalCopies : 1, availableCopies : 1, };
+	showModal.value = true;
+};
+
+const openEditModal = book => {
+	isEdit.value = true;
+	editBook.value = {...book};
+	showModal.value = true;
+};
+
+const closeModal = () => {
+	showModal.value = false;
+};
+
+const submitBook = async () => {
+	const endPoint = isEdit.value ? '/admin/editBook' : '/admin/addBook';
+	try {
+		const response = await api.post(endPoint, editBook.value);
+		if(response.code === 200 || response.data?.code === 200) {
+			alert(response.message || '操作成功');
+			showModal.value = false;
+			await loadBooks();
+		} else {
+			alert(response.message || '操作失败');
+		}
+	} catch(err) {
+		console.log(err);
+	}
+}
+
 onMounted(async () => {
 	loading.value = true;
 	await Promise.all([loadBooks(), loadCategories()]);
@@ -164,6 +251,14 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .book-manage {
 	padding: 20px;
+
+	h2 {
+		font-size: 22px;
+		margin-bottom: 20px;
+		color: #2b4c7e;
+		text-align: center;
+		font-weight: 600;
+	}
 
 	.filter {
 		margin-bottom: 15px;
@@ -230,6 +325,17 @@ onMounted(async () => {
 				border: 1px solid #ddd;
 				text-align: center;
 				vertical-align: middle;
+
+				.book-link {
+					color: #3182ce;
+					text-decoration: none;
+					cursor: pointer;
+
+					&:hover {
+						text-decoration: underline;
+						color: #2563eb;
+					}
+				}
 			}
 
 			th {
@@ -305,6 +411,86 @@ onMounted(async () => {
 			padding: 15px 0;
 			color: #666;
 		}
+	}
+	.modal-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0,0,0,0.4);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 999;
+
+		.modal {
+			width: 400px;
+			padding: 40px;
+			background: white;
+
+			.modal-body {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+				margin-bottom: 20px;
+				
+				.label {
+					margin-right: 10px;
+				}
+				
+				input,
+				select {
+					padding: 6px;
+					border-radius: 6px;
+					border: 1px solid #ccc;
+					font-size: 14px;
+					outline: none;
+					transition: border-color 0.2s, box-shadow 0.2s;
+					background-color: white;
+					width: 100%;
+					box-sizing: border-box;
+					appearance: none;
+
+					&:hover,
+					&:focus {
+						border-color: #3182ce;
+						box-shadow: 0 0 3px #3182ce;
+					}
+
+					&:disabled {
+						background-color: #f5f5f5;
+						cursor: not-allowed;
+					}
+				}
+
+				select {
+					background-image: linear-gradient(45deg, transparent 50%, #3182ce 50%),
+									  linear-gradient(135deg, #3182ce 50%, transparent 50%);
+					background-position: calc(100% - 16px) center, calc(100% - 12px) center;
+					background-size: 5px 5px, 5px 5px;
+					background-repeat: no-repeat;
+					padding-right: 30px;
+					cursor: pointer;
+				}
+			}
+
+			.modal-footer {
+				display: flex;
+				justify-content: center;
+				gap: 20px;
+
+				.btn {
+					flex: 1;
+					margin: 0 6px;
+					border: none;
+					border-radius: 6px;
+					color: white;
+					padding: 8px;	
+					cursor: pointer;
+
+					&.confirm {	background-color: #3b82f6; }
+					&.cancel { background-color: #777; }
+				}
+			}
+		}	
 	}
 }
 </style>

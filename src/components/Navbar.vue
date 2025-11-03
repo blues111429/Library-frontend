@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            <button>所有图书</button>
+            <button @click="$router.push('/bookList')">所有图书</button>
             <button>智能推荐</button>
             <button>热门榜单</button>
         </nav>
@@ -43,8 +43,10 @@ const logout = async () => {
         await api.post('/user/logout');
         userStore.logout();
         modalRef.value.showModalAndRedirect('您已退出登录', 'success');
+        //刷新当前页面
+        window.location.reload();
     } catch (err) {
-        modalRef.value.showModalAndRedirect('退出失败，请重试', 'error');
+        modalRef.value.showModalAndRedirect('退出失败，请重试', 'error'); 
     } finally {
         showDropdown.value = false;
     }
