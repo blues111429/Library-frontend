@@ -3,8 +3,6 @@
         <Navbar />
 
         <div class="content-wrapper">
-            <h2 class="page-title">所有图书</h2>
-
             <div class="main-content">
                 <!-- 左侧筛选栏 -->
                 <aside class="sidebar" :class="{ collapsed: isSidebarCollapsed }">
@@ -65,6 +63,8 @@
                         <input type="number" v-model.number="jumpPage" min="1" :max="totalPages"
                             @keyup.enter="goPage" />
                         <button @click="goPage">跳转</button>
+                        <!-- 🧠 猜你喜欢按钮 -->
+                        <button class="recommend-btn" @click="refreshRecommendations">猜你喜欢 🔄</button>
                     </div>
 
                     <!-- 预留：智能推荐区块 -->
@@ -98,7 +98,7 @@ const loading = ref(true);
 const selectedCategory = ref("");
 const selectedStatus = ref("");
 const currentPage = ref(1);
-const pageSize = ref(8);
+const pageSize = ref(15);
 const jumpPage = ref(1);
 
 // 侧边栏折叠状态
@@ -115,6 +115,7 @@ const loadBooks = async () => {
     loading.value = true;
     try {
         const res = await api.get("/book/bookList");
+        console.log("获取到的全部书籍",res);
         if (res.code === 200) books.value = res.data.map(book => ({
             ...book,
             coverUrl: book.isbn
@@ -140,6 +141,7 @@ const loadCategories = async () => {
 
 // 过滤逻辑
 const filteredBooks = computed(() => {
+    console.log("Filtered Books:", books.value);  // 调试输出
     return books.value.filter((book) => {
         const categoryMatch = selectedCategory.value
             ? book.categoryName === selectedCategory.value
@@ -155,9 +157,11 @@ const filteredBooks = computed(() => {
 });
 
 // 分页计算
-const totalPages = computed(() =>
-    Math.ceil(filteredBooks.value.length / pageSize.value)
-);
+const totalPages = computed(() =>{
+    const total = Math.ceil(filteredBooks.value.length / pageSize.value);
+    console.log("Total Pages:", total); // 调试输出
+    return total
+});
 const pagedBooks = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value;
     return filteredBooks.value.slice(start, start + pageSize.value);
@@ -165,13 +169,13 @@ const pagedBooks = computed(() => {
 
 // 翻页
 const prevPage = () => {
-    if(currentPage.value > 1) {
+    if (currentPage.value > 1) {
         currentPage.value--;
         scrollToTop();
     }
 }
 const nextPage = () => {
-    if(currentPage.value < totalPages.value) {
+    if (currentPage.value < totalPages.value) {
         currentPage.value++;
         scrollToTop();
     }
@@ -197,13 +201,54 @@ const applyFilter = () => {
 
 // 跳转详情
 const goDetail = (id) => {
-    api.post('/book/browse', {bookId : id});
+    const state = {
+        currentPage: currentPage.value,
+        selectedCategory: selectedCategory.value,
+        selectedStatus: selectedStatus.value,
+        scrollY: window.scrollY
+    };
+    sessionStorage.setItem('bookListState', JSON.stringify(state));
+
+    api.post('/book/browse', { bookId: id });
     router.push(`/book/${id}`);
 }
 
+//刷新推荐
+const refreshRecommendations = async () => {
+    try {
+        const res = await api.get("/book/refreshRecommend");
+        if (res.code === 200) {
+            books.value = res.data.map(book => ({
+                ...book,
+                coverUrl: book.isbn
+                    ? `https://covers.openlibrary.org/b/isbn/${book.isbn}-M.jpg`
+                    : defaultCover
+            }));
+            currentPage.value = 1;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch (err) {
+        console.error("刷新推荐失败", err);
+    }
+};
+
 onMounted(() => {
-    loadBooks();
-    loadCategories();
+    const savedState = sessionStorage.getItem('bookListState');
+    if (savedState) {
+        const { currentPage: cp, selectedCategory: sc, selectedStatus: ss, scrollY } = JSON.parse(savedState);
+        currentPage.value = cp || 1;
+        selectedCategory.value = sc || '';
+        selectedStatus.value = ss || '';
+        loadBooks().then(() => {
+            loadCategories();
+            setTimeout(() => window.scrollTo(0, scrollY || 0), 100);
+        });
+        sessionStorage.removeItem('bookListState');
+    } else {
+        loadBooks();
+        loadCategories();
+    }
+
 });
 </script>
 
@@ -236,7 +281,9 @@ onMounted(() => {
     /* ==== 侧边栏 ==== */
     .sidebar {
         flex-shrink: 0;
-        width: 250px;
+        width: 180px;
+        position: sticky;
+        top: 100px;
         background: #ffffff;
         padding: 20px;
         border-radius: 12px;
@@ -312,7 +359,7 @@ onMounted(() => {
 
         .books-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(5, 1fr);
             gap: 28px;
             justify-items: center;
             margin-bottom: 40px;
@@ -429,6 +476,7 @@ onMounted(() => {
                 font-size: 14px;
                 color: #444;
             }
+
         }
     }
 

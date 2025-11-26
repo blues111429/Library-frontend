@@ -21,6 +21,14 @@
                         <p class="isbn">ISBN：{{ book.isbn }}</p>
                         <p class="category">分类：{{ categoryName }}</p>
 
+                        <p class="tags" v-if="book.tags && book.tags.length">
+                            <span class="tag-label">标签:</span>
+                            <span class="tag" v-for="(tag, index) in book.tags" :key="index">{{ tag }}</span>
+                        </p>
+                        <p class="tags" v-else>
+                            <span class="tag-label">标签:</span>暂无标签
+                        </p>
+
                         <p class="description" v-if="book.description">{{ book.description }}</p>
 
                         <div class="copies-status">
@@ -106,6 +114,10 @@ const loadBookDetail = async () => {
         const response = await api.get(`/book/${bookId}`);
         if (response.code === 200 && response.data) {
             book.value = response.data;
+            console.log("图书详情:", book.value.tags);
+            if (book.value.tags && typeof book.value.tags === 'string') {
+                book.value.tags = book.value.tags.split(',').map(tag => tag.trim());
+            }
 
             if (book.value.categoryId) {
                 const categoryRes = await api.get('/category/categoryList');
@@ -253,6 +265,39 @@ onMounted(() => {
                     font-size: 15px;
                     color: #444;
                     line-height: 1.5;
+                }
+
+                .tags {
+                    display: flex;
+                    flex-wrap: wrap;
+                    /* 保证标签换行 */
+                    justify-content: center;
+                    /* 水平居中 */
+                    align-items: center;
+                    /* 垂直居中 */
+                    gap: 12px;
+                    /* 标签间的间距 */
+                    text-align: center;
+                    /* 标签内的文本居中 */
+                }
+
+                .tag {
+                    flex: 0 0 calc(33.33% - 8px);
+                    /* 每个标签占用的宽度，减去标签间隔 */
+                    margin-bottom: 5px;
+                    /* 每行之间的间距 */
+                    background-color: #f0f4f8;
+                    color: #3182ce;
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    padding: 4px 10px;
+                    transition: background-color 0.3s ease, color 0.3s ease;
+
+                    &:hover {
+                        background-color: #3182ce;
+                        color: white;
+                    }
                 }
 
                 .description {
