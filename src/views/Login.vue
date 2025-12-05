@@ -17,8 +17,6 @@
                 <button class="btn home-btn" @click="$router.push('/')">主页</button>
             </div>
         </div>
-
-        <BaseToast ref="toastRef" />
     </div>
 
     <BaseToast ref="toastRef" />

@@ -229,11 +229,13 @@ const submitBook = async () => {
 	const endPoint = isEdit.value ? '/admin/editBook' : '/admin/addBook';
 	try {
 		const response = await api.post(endPoint, editBook.value);
+		console.log(editBook.value);
 		if(response.code === 200 || response.data?.code === 200) {
 			alert(response.message || '操作成功');
 			showModal.value = false;
 			await loadBooks();
 		} else {
+			console.log(response.message);
 			alert(response.message || '操作失败');
 		}
 	} catch(err) {

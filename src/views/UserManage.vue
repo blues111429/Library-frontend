@@ -228,9 +228,10 @@ onMounted(loadUsers);
     margin-bottom: 20px;
 
     select {
-        padding: 5px 10px;
+        padding: 8px 12px;
         border-radius: 6px;
         border: 1px solid #ccc;
+        margin-bottom: 10px;
     }
 
     .add-btn {
@@ -238,8 +239,9 @@ onMounted(loadUsers);
         color: white;
         border: none;
         border-radius: 6px;
-        padding: 6px 12px;
+        padding: 8px 16px;
         cursor: pointer;
+        margin-top: 10px;
 
         &:hover {
             background: #3c5f8b;
@@ -252,6 +254,7 @@ onMounted(loadUsers);
     overflow-y: auto;            /* 超出时显示垂直滚动条 */
     border: 1px solid #ddd;
     border-radius: 8px;
+    margin-top: 20px;
 }
 
 /* 固定表头 */
@@ -267,7 +270,7 @@ onMounted(loadUsers);
     width: 100%;
     border-collapse: collapse;
     th, td {
-        padding: 10px;
+        padding: 12px 15px;
         border: 1px solid #ddd;
         text-align: center;
     }
@@ -287,7 +290,7 @@ onMounted(loadUsers);
 
     .actions .action {
         margin: 0 4px;
-        padding: 5px 8px;
+        padding: 5px 12px;
         border: none;
         border-radius: 6px;
         cursor: pointer;
@@ -296,11 +299,10 @@ onMounted(loadUsers);
 
         &.edit { background: #4f79a8; color: white; }
         &.danger { background: #b22222; color: white; }
-    }
-
-    .actions .action.toggle {
-        &.disable { background-color: #dc3545; color: white; }
-        &.enable { background-color: #28a745; color: white; }
+        &.toggle {
+            &.disable { background-color: #dc3545; color: white; }
+            &.enable { background-color: #28a745; color: white; }
+        }
     }
 }
 
@@ -319,16 +321,17 @@ onMounted(loadUsers);
     background: white;
     border-radius: 10px;
     padding: 20px;
-    width: 400px;
+    width: 450px;
+    max-width: 90%; /* 防止弹窗超出屏幕宽度 */
 }
 
 .form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 
     input, select {
-        padding: 6px;
+        padding: 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
     }
@@ -337,7 +340,7 @@ onMounted(loadUsers);
 .modal-btns {
     display: flex;
     justify-content: space-between;
-    margin-top: 15px;
+    margin-top: 20px;
 
     .btn {
         flex: 1;
@@ -345,11 +348,95 @@ onMounted(loadUsers);
         border: none;
         border-radius: 6px;
         color: white;
-        padding: 8px;
+        padding: 10px;
         cursor: pointer;
 
         &.confirm { background: #4f79a8; }
         &.cancel { background: #777; }
+    }
+}
+
+/* 响应式样式 */
+
+/* 对于屏幕宽度小于 768px 的设备 */
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column; /* 垂直排列 */
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .user-table-container {
+        max-height: 500px;
+    }
+
+    .user-table th, .user-table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .user-table {
+        width: 100%;
+    }
+
+    .actions .action {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+
+    .modal-card {
+        width: 100%;
+        max-width: 90%;
+        padding: 15px;
+    }
+
+    .form input, .form select {
+        width: 100%;
+    }
+
+    .modal-btns {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .modal-btns .btn {
+        flex: unset;
+        width: 100%;
+    }
+}
+
+/* 对于屏幕宽度小于 480px 的设备 */
+@media (max-width: 480px) {
+    .filter-container {
+        gap: 10px;
+    }
+
+    .user-table-container {
+        max-height: 400px;
+    }
+
+    .user-table th, .user-table td {
+        font-size: 10px;
+        padding: 6px;
+    }
+
+    .actions .action {
+        font-size: 10px;
+        padding: 4px 6px;
+    }
+
+    .modal-card {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .form input, .form select {
+        padding: 4px;
+    }
+
+    .modal-btns .btn {
+        padding: 10px;
+        font-size: 14px;
     }
 }
 </style>

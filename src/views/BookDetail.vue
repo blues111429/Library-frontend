@@ -46,7 +46,7 @@
                     </div>
                 </div>
 
-                <div class="stats">
+                <div class="status">
                     <span>浏览：{{ book.viewCount }}</span>
                     <span>借阅：{{ book.borrowCount }}</span>
                     <span class="status" :class="book.status === 1 ? 'on' : 'off'">
@@ -54,22 +54,22 @@
                     </span>
                 </div>
 
-                <!-- 静态评论区 -->
+                <!-- 评论区 -->
                 <div class="comments-section">
                     <h3>评论区</h3>
 
                     <!-- 添加新评论 -->
                     <div class="add-comment">
                         <textarea v-model="newComment" placeholder="写下你的评论..." rows="3"></textarea>
-                        <button @click="addComment" :disabled="!newComment.trim()">发布评论</button>
+                        <button @click="publishComment" :disabled="!newComment.trim()">发布评论</button>
                     </div>
 
                     <!-- 评论列表 -->
                     <div class="comment-list">
                         <div class="comment-item" v-for="(c, index) in comments" :key="index">
-                            <div class="user">{{ c.user }}</div>
-                            <div class="time">{{ c.time }}</div>
-                            <div class="content">{{ c.content }}</div>
+                            <div class="user">{{ c.name }}</div>
+                            <div class="time">{{ formatDate(c.updated_at) }}</div>
+                            <div class="content">{{ c.comment_text }}</div>
                         </div>
                     </div>
 
@@ -81,6 +81,8 @@
                 <p class="not-found">未找到该图书。</p>
             </div>
         </div>
+
+        <BaseToast ref="toastRef" />
     </div>
 </template>
 
@@ -90,31 +92,37 @@ import { useRoute, useRouter } from 'vue-router';
 import api from '../api';
 import Navbar from '../components/Navbar.vue';
 import { useUserStore } from '../stores/userStore';
+import BaseToast from '../components/Toast.vue';
 
 const route = useRoute();
 const router = useRouter();
+const userStore = useUserStore();
+const toastRef = ref(null);
 const bookId = route.params.id;
-
+//图书加载数据
+//图书
 const book = ref(null);
+//分类
 const categoryName = ref('-');
+// 评论数据
+const newComment = ref('');
+const comments = ref([]);
+//加载状态
 const loading = ref(true);
 
-const userStore = useUserStore();
 
-// 评论数据（静态）
-const newComment = ref('');
-const comments = ref([
-    { user: '李四', time: '2025-10-29 10:30', content: '这本书很有用！' },
-    { user: '王五', time: '2025-10-28 14:20', content: '内容讲解得很清楚，推荐阅读。' }
-]);
-
+//函数
+//时间转换
+const formatDate = t => (t ? new Date(t).toLocaleString() : '-');
 // 获取图书详情
 const loadBookDetail = async () => {
     try {
         const response = await api.get(`/book/${bookId}`);
         if (response.code === 200 && response.data) {
             book.value = response.data;
-            console.log("图书详情:", book.value.tags);
+
+            await loadBookComments();
+
             if (book.value.tags && typeof book.value.tags === 'string') {
                 book.value.tags = book.value.tags.split(',').map(tag => tag.trim());
             }
@@ -128,15 +136,45 @@ const loadBookDetail = async () => {
             book.value = null;
         }
     } catch (err) {
-        console.error('获取图书详情失败:', err);
+        toastRef.value?.showToast('服务器错误,请稍后再试', 'error');
         book.value = null;
     } finally {
         loading.value = false;
     }
 };
 
-// 返回
-const goBack = () => router.back();
+//评论区
+//加载评论
+const loadBookComments = async () => {
+    try {
+        const data = { book_id: book.value.id };
+        const response = await api.post('/comment/getComments', data);
+        if (response.code === 200 && response.data) {
+            comments.value = response.data;
+            comments.value.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        } else {
+            toastRef.value?.showToast(err, 'error');
+            comments.value = [];
+        }
+    } catch (err) {
+        toastRef.value?.showToast('服务器错误,请稍后再试', 'error');
+        comments.value = [];
+    }
+}
+//发布评论
+const publishComment = async () => {
+    const data = { newComment: newComment.value, book_id: book.value.id, user_id: userStore.userInfo.user_id };
+    console.log(data);
+    try {
+        const response = await api.post('/comment/publishComment', data);
+        toastRef.value?.showToast(response.message, 'success');
+        newComment.value = '';
+        await loadBookComments();
+    } catch (err) {
+        toastRef.value?.showToast('发布失败', 'error');
+        newComment.value = '';
+    }
+}
 
 // 借阅逻辑
 const borrowBook = async () => {
@@ -166,17 +204,8 @@ const borrowBook = async () => {
     }
 };
 
-// 前端模拟添加评论
-const addComment = () => {
-    if (!newComment.value.trim()) return;
-    comments.value.unshift({
-        user: '我',
-        time: new Date().toLocaleString(),
-        content: newComment.value.trim()
-    });
-    newComment.value = '';
-};
-
+// 返回
+const goBack = () => router.back();
 onMounted(() => {
     loadBookDetail();
 });
@@ -353,7 +382,7 @@ onMounted(() => {
             }
         }
 
-        .stats {
+        .status {
             display: flex;
             gap: 40px;
             font-size: 14px;
@@ -391,7 +420,8 @@ onMounted(() => {
                 gap: 12px;
 
                 textarea {
-                    width: 100%;
+                    min-width: 60%;
+                    max-width: 100%;
                     min-height: 70px;
                     border: 1px solid #d1d5db;
                     border-radius: 8px;

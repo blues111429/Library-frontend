@@ -1,5 +1,12 @@
 import axios from 'axios';
 
+// 游客请求API
+const apiWithoutToken = axios.create({
+    baseURL: 'http://127.0.0.1:8080/api',
+    timeout: 10000
+});
+
+// 必须含有token的API请求实例
 const api = axios.create({
     baseURL: 'http://127.0.0.1:8080/api',
     headers: {
@@ -9,7 +16,7 @@ const api = axios.create({
     timeout: 10000
 });
 
-// 请求拦截器
+// 带token的api请求拦截器
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -17,7 +24,6 @@ api.interceptors.request.use(config => {
     }
     return config;
 }, error => Promise.reject(error));
-
 api.interceptors.response.use(
     response => response.data,
     err => {
