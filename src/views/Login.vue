@@ -65,11 +65,7 @@ const login = async () => {
             toastRef.value?.showToast(response.message, 'success');
 
             setTimeout(() => {
-                if (typeCn === '学生' || typeCn === '教师') {
-                    router.push('/');
-                } else if (typeCn === '管理员') {
-                    router.push('/userCenter');
-                }
+                router.push('/userCenter');
             }, 1500);
         } else {
             toastRef.value?.showToast(response.message, 'warning');

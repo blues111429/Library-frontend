@@ -27,10 +27,12 @@ import { ref, onMounted } from 'vue';
 import api from '../api';
 import { useUserStore } from '../stores/userStore';
 import BaseModal from './BaseModal.vue';
+import { useRouter } from 'vue-router';
 
 const showDropdown = ref(false);
 const userStore = useUserStore();
 const modalRef = ref(null);
+const router = useRouter();
 
 const handlerMouseLeave = () => {
     setTimeout(() => {
@@ -43,10 +45,16 @@ const logout = async () => {
         await api.post('/user/logout');
         userStore.logout();
         modalRef.value.showModalAndRedirect('您已退出登录', 'success');
-        //刷新当前页面
-        window.location.reload();
+        router.beforeEach((to, from, next) => {
+            if (!userStore.isLoggedIn) {
+                next('/userCenter');
+            } else {
+                next();
+            }
+        });
     } catch (err) {
         modalRef.value.showModalAndRedirect('退出失败，请重试', 'error'); 
+        console.log('退出登录失败', err);
     } finally {
         showDropdown.value = false;
     }

@@ -65,13 +65,13 @@
             <button class="btn login" @click="$router.push('/login')">立即登录</button>
         </div>
 
-        <BaseModal ref="modalRef" />
+        <BaseToast ref="toastRef" />
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import BaseModal from '../components/BaseModal.vue';
+import BaseToast from '../components/Toast.vue';
 import { useUserStore } from '../stores/userStore';
 import api from '../api';
 //弹窗显示
@@ -80,6 +80,8 @@ const modalRef = ref(false);
 const loading = ref(true);
 //
 const userStore = useUserStore();
+//
+const toastRef = ref(null);
 //是否修改信息
 const isEditing = ref(false);
 
@@ -125,7 +127,7 @@ const getUserInfo = async () => {
         await userStore.fetchUserInfo();//拉取用户信息
     } catch (err) {
         console.log('获取用户信息失败', err);
-        modalRef.value.showModalAndRedirect('无法获取用户信息，请重新登录', 'warning', '/login');
+        toastRef.value?.showToast('获取用户信息失败，请重试', 'error');
     } finally {
         loading.value = false;
     }
@@ -136,7 +138,7 @@ onMounted(() => {
         getUserInfo();
     } else {
         loading.value = false;
-        modalRef.value.showModalAndRedirect('您还未登录', 'warning');
+        toastRef.value?.showToast('您还未登录，请先登录', 'warning');
     }
 });
 </script>

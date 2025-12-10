@@ -44,6 +44,8 @@
                 <button class="btn home-btn" @click="$router.push('/')">主页</button>
             </div>
         </div>
+
+        <BaseToast ref="toastRef" />
     </div>
 </template>
 
@@ -51,8 +53,10 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api';
+import BaseToast from '../components/Toast.vue';
 
 const router = useRouter();
+const toastRef = ref(null);
 
 const form = ref({
     phone: '',
@@ -77,7 +81,7 @@ const register = async () => {
     for (const field of requiredFields) {
         const value = form.value[field.key];
         if (!value || (typeof value === 'string' && !value.trim())) {
-            alert(`请输入${field.label}`);
+            toastRef.value?.showToast(`请输入${field.label}`, 'warning');
             return ;
         }
     }
@@ -92,17 +96,18 @@ const register = async () => {
             email: form.value.email
         };
         const response = await api.post('/user/register', data);
-        alert(response.message);
 
         if (response.data) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('userId', response.data.userId);
-
-            router.push('/login');
+            toastRef.value?.showToast('注册成功！', 'success');
+            setTimeout(() => {
+                router.push('/login');
+            }, 1500);
         }
     } catch (err) {
         console.error('注册失败', err);
-        alert('注册失败，请重试');
+        toastRef.value?.showToast('注册失败，请稍后重试', 'error');
     }
 };
 </script>
