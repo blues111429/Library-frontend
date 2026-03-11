@@ -153,11 +153,11 @@ const loadBookComments = async () => {
             comments.value = response.data;
             comments.value.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
         } else {
-            toastRef.value?.showToast(err, 'error');
+            console.log('暂无评论');
             comments.value = [];
         }
     } catch (err) {
-        toastRef.value?.showToast('服务器错误,请稍后再试', 'error');
+        console.log('暂无评论');
         comments.value = [];
     }
 }
@@ -196,6 +196,7 @@ const borrowBook = async () => {
             alert('借阅成功！');
             await loadBookDetail(); // 更新库存
         } else {
+            console.log(response.message);
             alert(response.message || '借阅失败');
         }
     } catch (err) {

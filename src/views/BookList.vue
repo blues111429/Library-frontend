@@ -133,6 +133,7 @@ const loadBooks = async () => {
 const loadCategories = async () => {
     try {
         const res = await api.get("/category/categoryList");
+        console.log(res.data);
         if (res.code === 200) categories.value = res.data;
     } catch (err) {
         console.error("获取分类列表失败", err);
