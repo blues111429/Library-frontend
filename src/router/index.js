@@ -12,6 +12,8 @@ import UserManage from "../views/UserManage.vue";
 import AdminLog from "../views/AdminLog.vue";
 import BookDetail from "../views/BookDetail.vue";
 import BookList from "../views/BookList.vue";
+import Dashboard from "../views/Dashboard.vue";
+import NewBookList from "../views/NewBookList.vue";
 
 const routes = [
     //首页
@@ -27,7 +29,9 @@ const routes = [
     { path:'/book/:id', name:"bookDetail", component: BookDetail },
     //图书列表
     { path:'/bookList', name:"bookList", component: BookList },
-    
+    //新书列表
+    { path:'/newBookList', name:"newBookList", component: NewBookList },
+
     //功能模块
     //用户信息
     { path:'/userInfo', name:"userInfo", component:UserInfo },
@@ -39,6 +43,8 @@ const routes = [
     { path:'/userManage', name:"userManage", component: UserManage},
     //管理员日志
     { path:'/adminLog', name:"adminLog", component: AdminLog },
+    //数据统计
+    { path:'/dashboard', name:"dashboard", component: Dashboard }
 ]
 
 const router = createRouter({

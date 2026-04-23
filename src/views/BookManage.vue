@@ -1,498 +1,458 @@
 <template>
-	<div class="book-manage">
-		<h2>图书管理</h2>
-		<!-- 筛选 -->
-		<div class="filter">
-			<!-- 根据类别 -->
-			<label>类别:
-				<select v-model="selectedCategory">
-					<option value="">全部</option>
-					<option v-for="c in categoryList" :key="c.id" :value="String(c.id)">
-						{{ c.name }}
-					</option>
-				</select>
-			</label>
-			<!-- 根据书名 -->
-			<label class="search">
-				书名搜索:
-				<input type="text" v-model="searchKeyword" placeholder="请输入书名关键词" />
-			</label>
-			<!-- 添加图书 -->
-			<button class="add-btn" @click="openAddModal">+ 新增图书</button>
-		</div>
+    <div class="book-manage">
+        <h2>图书管理</h2>
+        <!-- 筛选 -->
+        <div class="filter">
+            <label>类别:
+                <select v-model="selectedCategory">
+                    <option value="">全部</option>
+                    <option v-for="c in categoryList" :key="c.id" :value="String(c.id)">
+                        {{ c.name }}
+                    </option>
+                </select>
+            </label>
+            <label class="search">
+                书名搜索:
+                <input type="text" v-model="searchKeyword" placeholder="请输入书名关键词" />
+            </label>
+            <button class="add-btn" @click="openAddModal">+ 新增图书</button>
+        </div>
 
-		<!-- 加载状态 -->
-		<div v-if="loading" class="loading">正在加载图书...</div>
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading">正在加载图书...</div>
 
-		<!-- 图书表格 -->
-		<div v-else class="book-table-container">
-			<table class="book-table">
-				<thead>
-					<tr>
-						<th>ID</th>
-						<th>书名</th>
-						<th>作者</th>
-						<th>出版社</th>
-						<th>类别</th>
-						<th>总册数</th>
-						<th>可借数量</th>
-						<th>浏览次数</th>
-						<th>借阅次数</th>
-						<th>状态</th>
-						<th>操作</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="book in filteredBooks" :key="book.id">
-						<td>{{ book.id }}</td>
-						<td>
-							<router-link :to="`/book/${book.id}`" class="book-link">
-								{{ book.title }}
-							</router-link>
-						</td>
-						<td>{{ book.author }}</td>
-						<td>{{ book.publisher }}</td>
-						<td>{{ getCategoryName(book.categoryId) }}</td>
-						<td>{{ book.totalCopies }}</td>
-						<td>{{ book.availableCopies }}</td>
-						<td>{{ book.viewCount }}</td>
-						<td>{{ book.borrowCount }}</td>
-						<td>
-							<span :class="book.status === 1 ? 'status-on' : 'status-off'">
-								{{ book.status === 1 ? '上架中' : '已下架' }}
-							</span>
-						</td>
-						<td>
-							<button class="edit-btn" @click="openEditModal(book)">编辑</button>
-							<button
-								class="status-btn"
-								:class="book.status === 1 ? 'off' : 'on'"
-								@click="toggleStatus(book)"
-							>
-								{{ book.status === 1 ? '下架' : '上架' }}
-							</button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<div v-if="filteredBooks.length === 0" class="no-data">暂无符合条件的图书</div>
-		</div>
+        <!-- 图书分页展示 -->
+        <div v-else class="book-pagination-container">
+            <div class="book-items">
+                <div class="book-item" v-for="book in pagedBooks" :key="book.id">
+                    <h3>{{ book.title }}</h3>
+                    <p>类别: {{ getCategoryName(book.categoryId) }}</p>
+                    <p>可借数量: {{ book.availableCopies }}</p>
+                    <p>浏览次数: {{ book.viewCount }}</p>
+                    <p>借阅次数: {{ book.borrowCount }}</p>
+                    <p>状态: <span :class="book.status === 1 ? 'status-on' : 'status-off'">{{ book.status === 1 ? '上架中' : '已下架' }}</span></p>
+                    <div class="book-actions">
+                        <button class="edit-btn" @click="openEditModal(book)">编辑</button>
+                        <button class="status-btn" @click="toggleStatus(book)">
+                        {{ book.status === 1 ? '下架' : '上架' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-		<!-- 编辑/新增图书 -->
-		<div v-if="showModal" class="modal-overlay">
-			<div class="modal">
-				<h3>{{ isEdit ? '编辑图书' : '新增图书' }}</h3>
-				<div class="modal-body">
-					<label>书名:</label>
-					<input v-model="editBook.title" />	
+            <!-- 分页控件 -->
+            <div class="pagination">
+                <button :disabled="currentPage === 1" @click="changePage(currentPage - 1)">上一页</button>
+                <span>{{ currentPage }} / {{ totalPages }}</span>
+                <button :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">下一页</button>
+            </div>
+        </div>
 
-					<label>作者:</label>
-					<input v-model="editBook.author" />
-
-					<label>分类:</label>
-					<select v-model="editBook.categoryId">
-						<option v-for="c in categoryList" :key="c.id" :value="c.id">{{ c.name }}</option>
-					</select>
-
-					<label>ISBN:</label>
-					<input v-model="editBook.isbn" />
-
-					<label>总册数:</label>
-					<input v-model="editBook.totalCopies" />
-
-					<label>可借册数:</label>
-					<input v-model="editBook.availableCopies" />
-
-					<label>出版社:</label>
-					<input v-model="editBook.publisher" />
-
-					<label>出版日期:</label>
-					<input v-model="editBook.publishYear" />
-				</div>
-				<div class="modal-footer">
-					<button class="btn confirm" @click="submitBook">{{ isEdit ? '保存修改' : '确认新增' }}</button>
-					<button class="btn cancel" @click="closeModal">取消</button>
-				</div>
-			</div>
-		</div>
-	</div>
+        <!-- 编辑/新增图书 -->
+        <div v-if="showModal" class="modal-overlay">
+            <div class="modal">
+                <h3>{{ isEdit ? '编辑图书' : '新增图书' }}</h3>
+                <div class="modal-body">
+                    <label>书名:</label>
+                    <input v-model="editBook.title" />
+                    <label>作者:</label>
+                    <input v-model="editBook.author" />
+                    <label>分类:</label>
+                    <select v-model="editBook.categoryId">
+                    <option v-for="c in categoryList" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    </select>
+                    <label>ISBN:</label>
+                    <input v-model="editBook.isbn" />
+                    <label>总册数:</label>
+                    <input v-model="editBook.totalCopies" />
+                    <label>可借册数:</label>
+                    <input v-model="editBook.availableCopies" />
+                    <label>出版社:</label>
+                    <input v-model="editBook.publisher" />
+                    <label>出版日期:</label>
+                    <input v-model="editBook.publishYear" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn confirm" @click="submitBook">{{ isEdit ? '保存修改' : '确认新增' }}</button>
+                    <button class="btn cancel" @click="closeModal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import api from '../api';
-//图书列表
+
 const bookList = ref([]);
-//分类列表
 const categoryList = ref([]);
-//筛选分类
 const selectedCategory = ref('');
-//书名关键词
 const searchKeyword = ref('');
-//加载状态
 const loading = ref(true);
 
 const isEdit = ref(false);
 const showModal = ref(false);
 const editBook = ref({
-	book_id : '',
-	title : '',
-	author: '',
-	categoryId : '',
-	isbn : '',
-	totalCopies : '',
-	availableCopies: '',
-	publisher : '',
-	publishYear : '',
-})
+    book_id: '',
+    title: '',
+    author: '',
+    categoryId: '',
+    isbn: '',
+    totalCopies: '',
+    availableCopies: '',
+    publisher: '',
+    publishYear: '',
+});
+
+// 分页相关
+const currentPage = ref(1);
+const pageSize = 10;
+
+const totalPages = computed(() => Math.ceil(filteredBooks.value.length / pageSize));
+
+watch(selectedCategory, () => {
+    currentPage.value = 1; // 切换分类时重置到第一页
+});
 
 // 获取图书列表
 const loadBooks = async () => {
-	try {
-		const response = await api.get('/book/bookList');
-		bookList.value = Array.isArray(response.data) ? response.data : [];
-		console.log(response.data);
-	} catch (err) {
-		console.error('获取图书列表失败:', err);
-	}
+    try {
+        const response = await api.get('/book/bookList');
+        bookList.value = Array.isArray(response.data) ? response.data : [];
+    } catch (err) {
+        console.error('获取图书列表失败:', err);
+    }
 };
 
 // 获取分类列表
 const loadCategories = async () => {
-	try {
-		const response = await api.get('/category/categoryList');
-		categoryList.value = Array.isArray(response.data) ? response.data : [];
-	} catch (err) {
-		console.error('获取分类列表失败:', err);
-	}
+    try {
+        const response = await api.get('/category/categoryList');
+        categoryList.value = Array.isArray(response.data) ? response.data : [];
+    } catch (err) {
+        onsole.error('获取分类列表失败:', err);
+    }
 };
 
 // 根据筛选条件计算过滤后的图书列表
 const filteredBooks = computed(() => {
-	let books = bookList.value;
+    let books = bookList.value;
 
-	//按类别筛选
-	if(selectedCategory.value) {
-		const selectedId = Number(selectedCategory.value);
-		books = books.filter(book => book.categoryId === selectedId);
-	}
+    if (selectedCategory.value) {
+        const selectedId = Number(selectedCategory.value);
+        books = books.filter(book => book.categoryId === selectedId);
+    }
 
-	//大小写分类
-	if(searchKeyword.value.trim() !== '') {
-		const keyword = searchKeyword.value.trim().toLowerCase();
-		books = books.filter(book => book.title.toLowerCase().includes(keyword));
-	}
+    if (searchKeyword.value.trim() !== '') {
+        const keyword = searchKeyword.value.trim().toLowerCase();
+        books = books.filter(book => book.title.toLowerCase().includes(keyword));
+    }
 
-	return books;
+    return books;
 });
 
-// 根据 categoryId 获取分类名称
+// 获取分类名称
 const getCategoryName = (id) => {
-	const category = categoryList.value.find(c => c.id === id);
-	return category ? category.name : '-';
+    const category = categoryList.value.find(c => c.id === id);
+    return category ? category.name : '-';
 };
 
+// 获取当前页面的图书
+const pagedBooks = computed(() => {
+    const startIndex = (currentPage.value - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredBooks.value.slice(startIndex, endIndex);
+});
+
+// 改变当前页
+const changePage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
+
+const openAddModal = () => { 
+    isEdit.value = false; 
+    editBook.value = { totalCopies : 1, availableCopies : 1, }; 
+    showModal.value = true; 
+};
+const openEditModal = book => { 
+    isEdit.value = true; 
+    editBook.value = {...book}; 
+    showModal.value = true; 
+}; 
+const closeModal = () => { 
+    showModal.value = false; 
+};
+const submitBook = async () => { 
+    const endPoint = isEdit.value ? '/admin/editBook' : '/admin/addBook'; 
+    try { 
+        const response = await api.post(endPoint, editBook.value); 
+        console.log(editBook.value); 
+        if(response.code === 200 || response.data?.code === 200) { 
+            alert(response.message || '操作成功'); 
+            showModal.value = false; 
+            await loadBooks(); 
+        } 
+        else { 
+            console.log(response.message); 
+            alert(response.message || '操作失败'); 
+        } 
+    } 
+    catch(err) { 
+        console.log(err); 
+    } 
+};
 //改变状态
 const toggleStatus = async (book) => {
-	try {
-		const newStatus = book.status === 1 ? 0 : 1;
-		const response = await api.post("/book/updateStatus", { id: book.id, status: newStatus });
-		if(response.code === 200) {
-			alert(`图书已${newStatus === 1 ? '上架' : '下架'}成功`);
-			await loadBooks();
-		} else {
-			console.log(response.message);
-		}
-	} catch (err) {
-		console.log('切换状态失败', err);
-		alert('服务器出错');
-	}
-}
-
-const openAddModal = () => {
-	isEdit.value = false;
-	editBook.value = { totalCopies : 1, availableCopies : 1, };
-	showModal.value = true;
-};
-
-const openEditModal = book => {
-	isEdit.value = true;
-	editBook.value = {...book};
-	showModal.value = true;
-};
-
-const closeModal = () => {
-	showModal.value = false;
-};
-
-const submitBook = async () => {
-	const endPoint = isEdit.value ? '/admin/editBook' : '/admin/addBook';
-	try {
-		const response = await api.post(endPoint, editBook.value);
-		console.log(editBook.value);
-		if(response.code === 200 || response.data?.code === 200) {
-			alert(response.message || '操作成功');
-			showModal.value = false;
-			await loadBooks();
-		} else {
-			console.log(response.message);
-			alert(response.message || '操作失败');
-		}
-	} catch(err) {
-		console.log(err);
-	}
+    try {
+        const newStatus = book.status === 1 ? 0 : 1;
+        const response = await api.post("/book/updateStatus", { id: book.id, status: newStatus });
+        if(response.code === 200) {
+        alert(`图书已${newStatus === 1 ? '上架' : '下架'}成功`);
+        await loadBooks();
+        } else {
+            console.log(response.message);
+        }
+    } catch (err) {
+        console.log('切换状态失败', err);
+        alert('服务器出错');
+    }
 }
 
 onMounted(async () => {
-	loading.value = true;
-	await Promise.all([loadBooks(), loadCategories()]);
-	loading.value = false;
+    loading.value = true;
+    await Promise.all([loadBooks(), loadCategories()]);
+    loading.value = false;
 });
 </script>
 
 <style lang="scss" scoped>
 .book-manage {
-	padding: 20px;
+    padding: 20px;
 
-	h2 {
-		font-size: 22px;
-		margin-bottom: 20px;
-		color: #2b4c7e;
-		text-align: center;
-		font-weight: 600;
-	}
+    h2 {
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: #2b4c7e;
+    text-align: center;
+    font-weight: 600;
+    }
 
-	.filter {
-		margin-bottom: 15px;
-		display: flex;
-		gap: 20px;
-		justify-content: center;
+    .filter {
+    margin-bottom: 15px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
 
-		select,
-		input {
-			padding: 5px 10px;
-			border-radius: 6px;
-			border: 1px solid #ccc;
-		}
+        select,
+        input {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
 
-		.search input {
-			width: 180px;
-			padding: 6px 10px;
-			border: 1px solid #ccc;
-			border-radius: 6px;
-			transition: border-color 0.2s;
+        .search input {
+        width: 180px;
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        transition: border-color 0.2s;
 
-			&:hover {
-				outline: none;
-				border-color: #3182ce;
-				box-shadow: 0 0 2px #3182ce;
-			}
-		}
+            &:hover {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 2px #3182ce;
+            }
+        }
 
-		.add-btn {
-			background: #3182ce;
-			color: white;
-			padding: 6px 12px;
-			border: none;
-			border-radius: 6px;
-			cursor: pointer;
+        .add-btn {
+        background: #3182ce;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
 
-			&:hover {
-				background: #2563eb;
-			}
-		}
-	}
+            &:hover {
+                background: #2563eb;
+            }
+        }
+    }
 
-	.loading {
-		text-align: center;
-		font-weight: bold;
-		color: #3182ce;
-		padding: 20px 0;
-	}
+    .loading {
+        text-align: center;
+        font-weight: bold;
+        color: #3182ce;
+        padding: 20px 0;
+    }
 
-	.book-table-container {
-		max-height: 700px;
-		overflow-y: auto;
-		border: 1px solid #ddd;
-		border-radius: 8px;
+    .book-pagination-container {
+        display: flex;
+        flex-direction: column;
 
-		.book-table {
-			width: 100%;
-			border-collapse: collapse;
-			border-spacing: 0;
-			table-layout: fixed;
+        .book-items {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 20px;
 
-			th, td {
-				padding: 10px;
-				border: 1px solid #ddd;
-				text-align: center;
-				vertical-align: middle;
+            .book-item {
+                padding: 15px;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                background-color: #f9f9f9;
+                width: calc(20% - 20px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                box-sizing: border-box;
 
-				.book-link {
-					color: #3182ce;
-					text-decoration: none;
-					cursor: pointer;
+                .book-actions {
+                    margin-top: 10px;
+                    display: flex;
+                    gap: 10px;
 
-					&:hover {
-						text-decoration: underline;
-						color: #2563eb;
-					}
-				}
-			}
+                    .edit-btn,
+                    .status-btn {
+                        flex: 1;
+                        padding: 6px;
+                        border: none;
+                        border-radius: 6px;
+                        color: white;
+                        cursor: pointer;
 
-			th {
-				background: #f4f6fa;
-				position: sticky;
-				top: 0;
-				z-index: 1;
-			}
+                        &.edit-btn {
+                            background-color: #3b82f6;
 
-			.status-on {
-				color: #16a34a;
-				font-weight: bold;
-			}
+                            &:hover {
+                                background-color: #2563eb;
+                            }
+                        }
 
-			.status-off {
-				color: #dc2626;
-				font-weight: bold;
-			}
+                        &.status-btn {
+                            background-color: #7a1a17;
 
-			td:last-child {
-				display: flex;
-				gap: 8px;
-				flex-direction: column;
-				align-items: center;
-			}
+                            &:hover {
+                                background-color: #9b2c25;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-			.edit-btn,
-			.status-btn {
-				width: 60px;
-				padding: 5px 12px;
-				border-radius: 6px;
-				border: none;
-				font-size: 14px;
-				cursor: pointer;
-				transition: all 0.2s ease;
-			}
+        .pagination {
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            display: flex; /* 让分页按钮居中 */
+            text-align: center;
+            
+            button {
+                padding: 8px 16px;
+                border-radius: 6px;
+                border: 1px solid #ccc;
+                cursor: pointer;
+                background-color: #3182ce;
+                color: white;
 
-			.edit-btn {
-				background-color: #3b82f6;
-				color: #fff;
+                &:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+                }
 
-				&:hover {
-					background-color: #2563eb;
-					box-shadow: 0 0 6px rgba(37, 99, 235, 0.4);
-				}
-			}
+                &:hover {
+                background-color: #2563eb;
+                }
+            }
 
-			.status-btn {
-				&.on {
-					background-color: #16a34a;
-					color: #fff;
+            span {
+                text-align: center;
+                justify-content: center;
+                margin-top: 5px;
+            }
+        }
+    }
 
-					&:hover {
-						background-color: #15803d;
-						box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
-					}
-				}
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
 
-				&.off {
-					background-color: #dc2626;
-					color: #fff;
+        .modal {
+            width: 400px;
+            padding: 40px;
+            background: white;
 
-					&:hover {
-						background-color: #b91c1c;
-						box-shadow: 0 0 6px rgba(220, 38, 38, 0.4);
-					}
-				}
-			}
-		}
+            .modal-body {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 20px;
 
-		.no-data {
-			text-align: center;
-			padding: 15px 0;
-			color: #666;
-		}
-	}
-	.modal-overlay {
-		position: fixed;
-		inset: 0;
-		background: rgba(0,0,0,0.4);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 999;
+                .label {
+                    margin-right: 10px;
+                }
 
-		.modal {
-			width: 400px;
-			padding: 40px;
-			background: white;
+                input,
+                select {
+                    padding: 6px;
+                    border-radius: 6px;
+                    border: 1px solid #ccc;
+                    font-size: 14px;
+                    outline: none;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                    background-color: white;
+                    width: 100%;
+                    box-sizing: border-box;
+                    appearance: none;
 
-			.modal-body {
-				display: flex;
-				flex-direction: column;
-				gap: 10px;
-				margin-bottom: 20px;
-				
-				.label {
-					margin-right: 10px;
-				}
-				
-				input,
-				select {
-					padding: 6px;
-					border-radius: 6px;
-					border: 1px solid #ccc;
-					font-size: 14px;
-					outline: none;
-					transition: border-color 0.2s, box-shadow 0.2s;
-					background-color: white;
-					width: 100%;
-					box-sizing: border-box;
-					appearance: none;
+                    &:hover,
+                    &:focus {
+                    border-color: #3182ce;
+                    box-shadow: 0 0 3px #3182ce;
+                    }
 
-					&:hover,
-					&:focus {
-						border-color: #3182ce;
-						box-shadow: 0 0 3px #3182ce;
-					}
+                    &:disabled {
+                    background-color: #f5f5f5;
+                    cursor: not-allowed;
+                    }
+                }
 
-					&:disabled {
-						background-color: #f5f5f5;
-						cursor: not-allowed;
-					}
-				}
+                select {
+                    background-image: linear-gradient(45deg, transparent 50%, #3182ce 50%),
+                                linear-gradient(135deg, #3182ce 50%, transparent 50%);
+                    background-position: calc(100% - 16px) center, calc(100% - 12px) center;
+                    background-size: 5px 5px, 5px 5px;
+                    background-repeat: no-repeat;
+                    padding-right: 30px;
+                    cursor: pointer;
+                }
+            }
 
-				select {
-					background-image: linear-gradient(45deg, transparent 50%, #3182ce 50%),
-									  linear-gradient(135deg, #3182ce 50%, transparent 50%);
-					background-position: calc(100% - 16px) center, calc(100% - 12px) center;
-					background-size: 5px 5px, 5px 5px;
-					background-repeat: no-repeat;
-					padding-right: 30px;
-					cursor: pointer;
-				}
-			}
+            .modal-footer {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
 
-			.modal-footer {
-				display: flex;
-				justify-content: center;
-				gap: 20px;
+                .btn {
+                flex: 1;
+                margin: 0 6px;
+                border: none;
+                border-radius: 6px;
+                color: white;
+                padding: 8px;	
+                cursor: pointer;
 
-				.btn {
-					flex: 1;
-					margin: 0 6px;
-					border: none;
-					border-radius: 6px;
-					color: white;
-					padding: 8px;	
-					cursor: pointer;
-
-					&.confirm {	background-color: #3b82f6; }
-					&.cancel { background-color: #777; }
-				}
-			}
-		}	
-	}
+                &.confirm {	background-color: #3b82f6; }
+                &.cancel { background-color: #777; }
+                }
+            }
+        }	
+    }
 }
 </style>

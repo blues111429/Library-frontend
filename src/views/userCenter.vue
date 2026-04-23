@@ -6,15 +6,15 @@
             <aside class="sidebar">
                 <ul>
                     <!-- 所有人都有 -->
-                    <li :class="{ active: activeMenu === 'info' }" @click="activeMenu='info'">用户信息</li>
-                    <li :class="{ active: activeMenu === 'myBorrows' }" @click="activeMenu='myBorrows'">借阅历史</li>
-                    <li :class="{ active: activeMenu === 'bookshelf' }" @click="activeMenu='bookshelf'">我的书架</li>
-
+                    <li :class="{ active: activeMenu === 'info' }" @click="toggleMenu('info')">用户信息</li>
+                    <li :class="{ active: activeMenu === 'myBorrows' }" @click="toggleMenu('myBorrows')">借阅历史</li>
+                    <li :class="{ active: activeMenu === 'bookshelf' }" @click="toggleMenu('bookshelf')">我的书架</li>
                     <!-- 管理员功能 -->
                     <template v-if="userType === '管理员'">
-                        <li :class="{ active: activeMenu === 'userManage' }" @click="activeMenu='userManage'">用户管理</li>
-                        <li :class="{ active: activeMenu === 'bookManage' }" @click="activeMenu='bookManage'">图书管理</li>
-                        <li :class="{ active: activeMenu === 'adminLog' }" @click="activeMenu='adminLog'">管理员日志</li>
+                        <li :class="{ active: activeMenu === 'userManage' }" @click="toggleMenu('userManage')">用户管理</li>
+                        <li :class="{ active: activeMenu === 'bookManage' }" @click="toggleMenu('bookManage')">图书管理</li>
+                        <li :class="{active: activeMenu === 'dashboard'}" @click="toggleMenu('dashboard')">数据统计</li>
+                        <li :class="{ active: activeMenu === 'adminLog' }" @click="toggleMenu('adminLog')">操作日志</li>
                     </template>
                 </ul>
 
@@ -35,13 +35,14 @@ import Navbar from '../components/Navbar.vue';
 import { ref, computed, watch } from 'vue';
 import { useUserStore } from '../stores/userStore';
 
-//子页面
+// 子页面导入
 import UserInfo from './UserInfo.vue';
 import UserManage from './UserManage.vue';
 import BookManage from './BookManage.vue';
 import AdminLog from './AdminLog.vue';
 import MyBorrows from './MyBorrows.vue';
 import BookShelf from './BookShelf.vue';
+import Dashboard from './Dashboard.vue';
 
 const userStore = useUserStore();
 const userType = computed(() => userStore.userInfo.type);
@@ -54,14 +55,20 @@ watch(activeMenu, (newVal) => {
 const currentComponent = computed(() => {
     switch (activeMenu.value) {
         case 'info': return UserInfo;
-        case'myBorrows': return MyBorrows;
-        case'bookshelf': return BookShelf;
-        case'userManage': return UserManage;
-        case'bookManage': return BookManage;
-        case'adminLog' : return AdminLog;
+        case 'myBorrows': return MyBorrows;
+        case 'bookshelf': return BookShelf;
+        case 'userManage': return UserManage;
+        case 'bookManage': return BookManage;
+        case 'dashboard': return Dashboard;
+        case 'adminLog': return AdminLog;
         default: return UserInfo;
     }
 });
+
+// 切换菜单项
+const toggleMenu = (menu) => {
+    activeMenu.value = menu;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -74,13 +81,11 @@ const currentComponent = computed(() => {
 .content-wrapper {
     display: flex;
     flex: 1;
-    padding: 20px;
 }
 
 /* ==== 侧边栏 ==== */
 .sidebar {
     width: 220px;
-    border-radius: 12px;
     padding: 20px;
     background-color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -94,7 +99,6 @@ const currentComponent = computed(() => {
             padding: 12px 16px;
             margin-bottom: 8px;
             cursor: pointer;
-            border-radius: 8px;
             transition: all 0.2s ease;
             color: #333;
             text-align: center;
@@ -145,7 +149,6 @@ const currentComponent = computed(() => {
     margin-left: 20px;
     padding: 20px;
     background-color: #ffffff;
-    border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     min-height: 400px;
 }

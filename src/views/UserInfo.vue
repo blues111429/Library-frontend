@@ -147,7 +147,6 @@ onMounted(() => {
 .profile-page {
     max-width: 700px;
     margin: 60px auto;
-    font-family: 'Segoe UI', sans-serif;
 
     /* ========== 加载中状态 ========== */
     .loading {

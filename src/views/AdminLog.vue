@@ -47,7 +47,7 @@ h2 {
 }
 
 .table-container {
-    max-height: 700px;
+    max-height: 525px;
     overflow-y: auto;
     border-radius: 10px;
     background: #fafafa;

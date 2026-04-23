@@ -142,6 +142,7 @@ const formatDate = t => (t ? new Date(t).toLocaleString() : '-');
 const loadUsers = async () => {
     const res = await api.get('/admin/userList');
     allUsers.value = res.data || [];
+    console.log(allUsers.value);
     applyFilter();
 };
 
@@ -199,6 +200,7 @@ onMounted(loadUsers);
 
 <style lang="scss" scoped>
 .admin-container {
+    max-height: 525px;
     background: #fff;
     padding: 20px;
     border-radius: 12px;
@@ -250,7 +252,7 @@ onMounted(loadUsers);
 }
 
 .user-table-container {
-    max-height: 700px;           /* 容器最大高度，可按需求调整 */
+    max-height: 525px;           /* 容器最大高度，可按需求调整 */
     overflow-y: auto;            /* 超出时显示垂直滚动条 */
     border: 1px solid #ddd;
     border-radius: 8px;

@@ -136,7 +136,7 @@ const loadBookDetail = async () => {
             book.value = null;
         }
     } catch (err) {
-        toastRef.value?.showToast('服务器错误,请稍后再试', 'error');
+        toastRef.value?.showToast('图书详情获取错误：服务器错误,请稍后再试', 'error');
         book.value = null;
     } finally {
         loading.value = false;
@@ -148,16 +148,15 @@ const loadBookDetail = async () => {
 const loadBookComments = async () => {
     try {
         const data = { book_id: book.value.id };
+        console.log(data);
         const response = await api.post('/comment/getComments', data);
-        if (response.code === 200 && response.data) {
+        console.log(response);
+        if (response.code === 200) {
             comments.value = response.data;
             comments.value.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-        } else {
-            toastRef.value?.showToast(err, 'error');
-            comments.value = [];
         }
     } catch (err) {
-        toastRef.value?.showToast('服务器错误,请稍后再试', 'error');
+        toastRef.value?.showToast('评论获取错误:服务器错误,请稍后再试', 'error');
         comments.value = [];
     }
 }
@@ -196,7 +195,8 @@ const borrowBook = async () => {
             alert('借阅成功！');
             await loadBookDetail(); // 更新库存
         } else {
-            alert(response.message || '借阅失败');
+            alert('借阅失败');
+            console.log(response);
         }
     } catch (err) {
         console.error(err);

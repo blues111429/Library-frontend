@@ -146,6 +146,7 @@ onMounted(() => {
         border-collapse: separate;
         border-spacing: 0 8px; // 行间距
         font-size: 14px;
+        max-height: 525px;
 
         th {
             text-align: center;
