@@ -60,6 +60,11 @@
 	  </div>
 	</section>
 
+        <!-- Footer Section -->
+        <footer class="footer">
+            © 2025 智能图书馆 | support@smartlib.com
+        </footer>
+    </div>
 	<!-- Footer Section -->
 	<footer class="footer">
 	  © 2025 智能图书馆 | support@smartlib.com
@@ -68,10 +73,31 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import Navbar from "../components/Navbar.vue";
+    import { ref } from "vue";
+    import Navbar from "../components/Navbar.vue";
 // 搜索关键字
-const keyword = ref('');
+    const isSidebarOpen = ref(false);
+
+    // 静态图书数据
+    const books = ref([
+        { id: 301, title: "百年孤独", author: "加西亚·马尔克斯", cover: "https://covers.openlibrary.org/b/isbn/9787544291170-L.jpg", description: "魔幻现实主义文学的代表作" },
+        { id: 302, title: "围城", author: "钱钟书", cover: "https://covers.openlibrary.org/b/isbn/9787020090006-L.jpg", description: "现代文学经典，幽默讽刺小说" },
+        { id: 303, title: "平凡的世界", author: "路遥", cover: "https://covers.openlibrary.org/b/isbn/9787530216781-L.jpg", description: "现实主义长篇小说" },
+    ]);
+
+    // 静态新闻数据
+    const news = ref([
+        { id: 1, title: "智能图书馆新功能上线", date: "2025-03-01", description: "智能图书馆新增了个性化推荐和自动借阅功能，提升了用户体验。", link: "#" },
+        { id: 2, title: "春季书籍推荐", date: "2025-03-05", description: "春季来临，智能图书馆为你推荐一系列适合春季阅读的书籍。", link: "#" },
+        { id: 3, title: "线上借阅服务全面升级", date: "2025-03-10", description: "智能图书馆线上借阅系统进行全面升级，提供更便捷的服务。", link: "#" },
+    ]);
+
+    function goSearch() {
+        console.log('搜索关键词:', keyword.value);
+        // 在这里添加搜索逻辑
+    }
+
+    const keyword = ref('');
 // 侧边栏状态
 const isSidebarOpen = ref(false);
 
@@ -97,6 +123,10 @@ function goSearch() {
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value;
 }
+
+    function toggleSidebar() {
+        isSidebarOpen.value = !isSidebarOpen.value;
+    }
 </script>
 
 <style scoped lang="scss">
