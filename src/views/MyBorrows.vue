@@ -117,10 +117,10 @@ const goDetail = async (bookId) => {
     try {
         await api.post('/book/browse', { bookId });
 
-        router.push(`/book/${bookId}`);
+        router.push(`/newbook/${bookId}`);
     } catch (err) {
         console.log('记录浏览历史失败', err);
-        router.push(`/book/${bookId}`);
+        router.push(`/newbook/${bookId}`);
     }
 }
 

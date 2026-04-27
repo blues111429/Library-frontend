@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            <button @click="$router.push('/bookList')">所有图书</button>
+            <button @click="$router.push('/newbooklist')">所有图书</button>
             <button>智能推荐</button>
             <button>热门榜单</button>
         </nav>

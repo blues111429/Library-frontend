@@ -26,10 +26,10 @@
                     
 
                     <!-- 图书列表显示（每本书显示为li） -->
-                    <li v-for="book in pagedBooks" :key="book.id" class="booklink">
+                    <li v-for="book in pagedBooks" :key="book.id" class="booklink" @click="goBookDetail(book.id)">
                         <div class="book-item">
                             <!-- 图书封面 -->
-                            <img :src="book.coverUrl" alt="Book Cover" class="book-cover" />
+                            <img :src="book.coverUrl" alt="Book Cover" class="book-cover"/>
                             <div class="book-info">
                                 <!-- 书名 -->
                                 <p class="book-title">{{ book.title }}</p>
@@ -58,7 +58,10 @@
 <script setup>
 import Navbar from '../components/Navbar.vue';
 import { computed, ref } from 'vue';
+import { useRouter } from "vue-router";
 import api from "../api";
+const router = useRouter();
+
 const defaultCover = "/default-cover.png";
 
 const isDropdownOpen = ref(false);
@@ -107,6 +110,36 @@ const loadBooks = async () => {
     } finally {
         loading.value = false;
     }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+    upToTop();
+};
+
+const nextPage = () => {
+    if (currentPage.value < Math.ceil(totalBooks.value / booksPerPage)) {
+        currentPage.value++;
+    }
+    upToTop();
+};
+
+const upToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const goBookDetail = (id) => {
+    console.log('点击了书籍ID:', id);
+    const state = {
+        currentPage: currentPage.value,
+        scrollY: window.scrollY
+    };
+    sessionStorage.setItem('bookListState', JSON.stringify(state));
+
+    api.post('/newbook/browse', { bookId: id });
+    router.push(`/newbook/${id}`);
 };
 loadBooks();
 </script>
@@ -202,13 +235,29 @@ loadBooks();
                         }
                     }
                 }
-
+                
                 li {
+                    padding: 10px;
+                    gap: 10px;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 10px;
                     justify-content: center;
+                }
+
+                .booklink {
+                    padding: 10px;
+                    gap: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    :hover {
+                        transition: transform 0.2s;
+
+                        background-color: #c7dde3;
+                    }
 
                     .book-item {
                         display: flex;
@@ -226,6 +275,7 @@ loadBooks();
                         border-radius: 8px;
                         border: 1px solid #ccc;
                         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        cursor: pointer;
                     }
 
                     .book-info {

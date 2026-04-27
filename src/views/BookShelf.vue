@@ -86,7 +86,7 @@ const goPage = () => {
 // 跳转到图书详情
 const goDetail = (id) => {
     api.post('/book/browse', {bookId : id});
-    router.push(`/book/${id}`);
+    router.push(`/newbook/${id}`);
 }
 
 onMounted(() => {

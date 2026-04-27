@@ -14,6 +14,7 @@ import BookDetail from "../views/BookDetail.vue";
 import BookList from "../views/BookList.vue";
 import Dashboard from "../views/Dashboard.vue";
 import NewBookList from "../views/NewBookList.vue";
+import NewBookDetail from "../views/NewBookDetail.vue";
 
 const routes = [
     //首页
@@ -27,6 +28,8 @@ const routes = [
     { path:'/userCenter', name:"userCenter",  component: UserCenter},
     //图书详情
     { path:'/book/:id', name:"bookDetail", component: BookDetail },
+    //新书详情
+    { path:'/newBook/:id', name:"newBookDetail", component: NewBookDetail },
     //图书列表
     { path:'/bookList', name:"bookList", component: BookList },
     //新书列表
